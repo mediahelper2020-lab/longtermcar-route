@@ -107,6 +107,13 @@ input:focus,textarea:focus{outline:none;border-color:var(--brand);background:#ff
 .summary div{background:#f4f7fb;border-radius:10px;padding:9px 10px;text-align:center}
 .summary span{display:block;font-size:11px;color:var(--muted)}
 .summary strong{display:block;font-size:16px;font-weight:800;margin-top:1px;letter-spacing:-.02em}
+.carhead{display:flex;align-items:center;gap:8px;margin:18px 0 8px;padding-top:15px;
+  border-top:1px solid var(--line)}
+.carhead.first{margin-top:0;padding-top:0;border-top:0}
+.cartag{width:23px;height:23px;border-radius:7px;color:#fff;font-size:11px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;flex:none}
+.carname{font-size:14.5px;font-weight:800}
+.carmeta{font-size:11.5px;color:var(--muted);margin-left:auto;text-align:right;flex:none}
 .route{list-style:none;margin:0;padding:0}
 .stop{display:flex;gap:10px;cursor:pointer;border-radius:9px;padding:2px 4px}
 .stop:hover{background:#f4f7fb}
@@ -180,7 +187,8 @@ input:focus,textarea:focus{outline:none;border-color:var(--brand);background:#ff
   .summary div{background:none;border-radius:0;text-align:left;padding:7px 18px}
   .summary div+div{border-left:1px solid var(--line)}
   /* 한 줄이 종이 폭만큼 늘어나면 이름과 시각이 멀어져 읽기 어렵다 */
-  .route,.note{max-width:150mm}
+  .route,.note,.carhead{max-width:150mm}
+  .carhead{break-after:avoid;page-break-after:avoid}
   .who{justify-content:flex-start;gap:12px}
   .stop{page-break-inside:avoid;padding:2px 0}
   .stop:hover{background:none}
@@ -228,6 +236,21 @@ input:focus,textarea:focus{outline:none;border-color:var(--brand);background:#ff
             <button type="button" class="chip" id="addRow">어르신 추가</button>
             <button type="button" class="chip quiet" id="sample">예시 채우기</button>
             <button type="button" class="chip quiet" id="reset">비우기</button>
+          </div>
+        </div>
+
+        <div class="blk">
+          <h2>차량</h2>
+          <p class="sub">여러 대로 나누면 가장 오래 걸리는 차가 최대한 빨리 끝나도록 인원을 배정합니다.</p>
+          <div class="grid2">
+            <div class="field">
+              <label for="cars">차량 대수</label>
+              <input type="number" id="cars" value="1" min="1" max="4">
+            </div>
+            <div class="field">
+              <label for="seats">차량당 정원</label>
+              <input type="number" id="seats" value="9" min="1" max="20">
+            </div>
           </div>
         </div>
 
@@ -285,7 +308,7 @@ input:focus,textarea:focus{outline:none;border-color:var(--brand);background:#ff
   <main class="mapwrap">
     <div id="map"></div>
     <div class="maptop" id="maptop"></div>
-    <div class="legend">
+    <div class="legend" id="legend">
       <div><i style="background:#0f9d8f"></i> 센터 (출발·도착)</div>
       <div><i style="background:#f4623a"></i> 어르신 방문 순서</div>
     </div>
@@ -558,10 +581,11 @@ var MV = (function(){
       }
     },
 
-    marker: function(lat, lng, label, cls, title){
+    marker: function(lat, lng, label, cls, title, color){
       marks.push({lat:lat, lng:lng});
       if(!kind) return;
-      var html = '<div class="mk mk-' + cls + '">' + esc(label) + '</div>';
+      var html = '<div class="mk mk-' + cls + '"' +
+                 (color ? ' style="background:' + color + '"' : '') + '>' + esc(label) + '</div>';
       if(kind === 'osm'){
         var size = cls === 'dot' ? 17 : 30;
         L.marker([lat, lng], {
@@ -648,28 +672,60 @@ function drawPreview(){
   MV.fit(pts);
 }
 
-/* 계산 후: 순서대로 선을 잇고 번호를 매긴다 */
-function drawRoute(ch, rows, order, total){
+/* 계산 후: 차량마다 다른 색으로 선을 잇고 번호를 매긴다.
+   마커를 담는 순서가 결과 목록의 data-m 값과 맞아야 하므로,
+   센터를 먼저 넣고 그다음 1호차, 2호차 순으로 넣는다. */
+function drawRoute(ch, rows, cars, total){
   routeShown = true;
-  mapTop.textContent = rows.length + '명 · ' + total.toFixed(1) + 'km';
+  var people = cars.reduce(function(n, c){ return n + c.order.length; }, 0);
+  mapTop.textContent = (cars.length > 1 ? cars.length + '대 · ' : '') +
+                       people + '명 · ' + total.toFixed(1) + 'km';
   mapTop.className = 'maptop on';
 
   MV.clear();
-  var pts = [[ch.lat, ch.lng]];
-  order.forEach(function(i){ pts.push([rows[i-1].hit.lat, rows[i-1].hit.lng]); });
-  pts.push([ch.lat, ch.lng]);
+  var allPts = [[ch.lat, ch.lng]];
 
-  // 흰 선을 깔고 그 위에 주황 선을 얹어야 지도 위에서 또렷하다
-  MV.line(pts, '#ffffff', 9);
-  MV.line(pts, '#f4623a', 5);
+  cars.forEach(function(car, ci){
+    var color = CAR_COLORS[ci % CAR_COLORS.length];
+    var pts = [[ch.lat, ch.lng]];
+    car.order.forEach(function(i){
+      var p = [rows[i-1].hit.lat, rows[i-1].hit.lng];
+      pts.push(p);
+      allPts.push(p);   // 센터는 위에서 한 번만 넣었다
+    });
+    pts.push([ch.lat, ch.lng]);
+    // 흰 선을 깔고 그 위에 차량 색을 얹어야 지도 위에서 또렷하다
+    MV.line(pts, '#ffffff', 9);
+    MV.line(pts, color, 5);
+  });
 
   MV.marker(ch.lat, ch.lng, '센터', 'center',
             document.getElementById('centerName').value.trim() || '센터');
-  order.forEach(function(pi, k){
-    MV.marker(rows[pi-1].hit.lat, rows[pi-1].hit.lng, String(k+1), 'stop', rows[pi-1].name);
+
+  cars.forEach(function(car, ci){
+    var color = CAR_COLORS[ci % CAR_COLORS.length];
+    car.order.forEach(function(pi, k){
+      MV.marker(rows[pi-1].hit.lat, rows[pi-1].hit.lng, String(k+1), 'stop',
+                (cars.length > 1 ? (ci+1) + '호차 · ' : '') + rows[pi-1].name, color);
+    });
   });
 
-  MV.fit(pts);
+  MV.fit(allPts);
+
+  // 범례도 차량 수에 맞춰 바꿔 준다
+  var lg = document.getElementById('legend');
+  if(lg){
+    var rows2 = ['<div><i style="background:#0f9d8f"></i> 센터 (출발·도착)</div>'];
+    if(cars.length > 1){
+      cars.forEach(function(car, ci){
+        rows2.push('<div><i style="background:' + CAR_COLORS[ci % CAR_COLORS.length] + '"></i> ' +
+                   (ci+1) + '호차 · ' + car.order.length + '명</div>');
+      });
+    } else {
+      rows2.push('<div><i style="background:' + CAR_COLORS[0] + '"></i> 어르신 방문 순서</div>');
+    }
+    lg.innerHTML = rows2.join('');
+  }
 }
 
 /* ================= 자동 이어쓰기 ================= */
@@ -688,7 +744,9 @@ function saveState(){
       st:document.getElementById('startTime').value,
       sp:document.getElementById('speed').value,
       sm:document.getElementById('stopMin').value,
-      fc:document.getElementById('factor').value
+      fc:document.getElementById('factor').value,
+      cr:document.getElementById('cars').value,
+      se:document.getElementById('seats').value
     }));
   }catch(e){ /* 저장이 막힌 브라우저에서도 앱은 그대로 동작한다 */ }
 }
@@ -703,6 +761,8 @@ function loadState(){
   if(s.sp) document.getElementById('speed').value = s.sp;
   if(s.sm) document.getElementById('stopMin').value = s.sm;
   if(s.fc) document.getElementById('factor').value = s.fc;
+  if(s.cr) document.getElementById('cars').value = s.cr;
+  if(s.se) document.getElementById('seats').value = s.se;
   peopleEl.innerHTML = '';
   s.rows.forEach(function(r){ addRow(r.n || '', r.a || ''); });
   return true;
@@ -887,6 +947,131 @@ function heuristic(D,N){
   return {order:order, dist:L2, exact:false};
 }
 
+/* ----- 차량 나누기 -----
+   목표는 총 주행거리를 줄이는 것이 아니라, 가장 오래 걸리는 차의
+   시간을 줄이는 것이다. 어르신이 차 안에 오래 앉아 계시지 않게 하는 것이
+   센터에서 실제로 중요한 부분이라서다. 같은 조건이면 총 거리가 짧은 쪽을 고른다. */
+
+var CAR_COLORS = ['#f4623a', '#2563eb', '#7c3aed', '#db2777'];
+
+/* 전체 거리표에서 한 차량이 맡은 사람만 뽑아 경로를 푼다.
+   idx 는 원본 번호(1부터)이고, 돌려주는 order 도 원본 번호로 맞춰 준다. */
+function routeFor(D, idx, exactOk){
+  var n = idx.length, i, j;
+  if(!n) return {order:[], dist:0, exact:true};
+
+  var sub = [];
+  for(i=0;i<=n;i++) sub.push(new Float64Array(n+1));
+  for(i=0;i<=n;i++){
+    for(j=0;j<=n;j++){
+      sub[i][j] = D[i === 0 ? 0 : idx[i-1]][j === 0 ? 0 : idx[j-1]];
+    }
+  }
+
+  var r = n === 1 ? {order:[1], dist:sub[0][1] + sub[1][0], exact:true}
+        : (exactOk && n <= 14) ? heldKarp(sub, n)
+        : heuristic(sub, n);
+
+  return {
+    order: r.order.map(function(k){ return idx[k-1]; }),
+    dist: r.dist,
+    exact: r.exact
+  };
+}
+
+function carMinutes(dist, count, opt){
+  return dist / opt.speed * 60 + opt.stopMin * count;
+}
+
+/* 배정이 얼마나 좋은지 재는 값. 가장 늦게 끝나는 차가 먼저고, 그다음이 총합. */
+function scoreGroups(D, groups, opt){
+  var max = 0, sum = 0;
+  var dists = groups.map(function(g){
+    var d = routeFor(D, g, false).dist;   // 탐색 중에는 빠른 근사로만 잰다
+    var m = carMinutes(d, g.length, opt);
+    if(m > max) max = m;
+    sum += d;
+    return d;
+  });
+  return {max:max, sum:sum, dists:dists};
+}
+function betterScore(a, b){
+  if(a.max < b.max - 1e-9) return true;
+  if(a.max > b.max + 1e-9) return false;
+  return a.sum < b.sum - 1e-9;
+}
+
+function splitCars(D, N, K, cap, pts, opt){
+  var i, all = [];
+  for(i=1;i<=N;i++) all.push(i);
+
+  if(K <= 1) return [all];
+
+  // 센터를 중심으로 방위각 순서로 세운 뒤, 이어지는 덩어리로 자른다.
+  // 같은 방향에 사는 분들이 한 차에 묶이도록 하는 것이 출발점이다.
+  var c = pts[0];
+  var byAngle = all.slice().sort(function(a, b){
+    return Math.atan2(pts[a].lat - c.lat, pts[a].lng - c.lng) -
+           Math.atan2(pts[b].lat - c.lat, pts[b].lng - c.lng);
+  });
+
+  // 어느 방향에서 자르기 시작하느냐에 따라 결과가 꽤 달라진다. 전부 돌려 본다.
+  var best = null, bestScore = null;
+  for(var r=0;r<byAngle.length;r++){
+    var rot = byAngle.slice(r).concat(byAngle.slice(0, r));
+    var g = [], per = Math.ceil(N / K);
+    for(i=0;i<K;i++) g.push(rot.slice(i*per, (i+1)*per).filter(Boolean));
+    if(g.some(function(x){ return x.length > cap; })) continue;
+    var sc = scoreGroups(D, g, opt);
+    if(!bestScore || betterScore(sc, bestScore)){ bestScore = sc; best = g; }
+  }
+
+  // 정원 때문에 어느 자리에서도 나눌 수 없으면 순서대로라도 채운다
+  if(!best){
+    best = [];
+    for(i=0;i<K;i++) best.push([]);
+    byAngle.forEach(function(p, k){ best[k % K].push(p); });
+    bestScore = scoreGroups(D, best, opt);
+  }
+
+  // 한 명씩 옮기거나 두 명을 맞바꿔 보면서 더 나아지면 받아들인다
+  var improved = true, guard = 0;
+  while(improved && guard++ < 60){
+    improved = false;
+
+    for(var a=0;a<K && !improved;a++){
+      for(var ai=0;ai<best[a].length && !improved;ai++){
+        for(var b=0;b<K && !improved;b++){
+          if(a === b || best[b].length >= cap) continue;
+          var moved = best.map(function(g, gi){
+            if(gi === a) return g.filter(function(_, k){ return k !== ai; });
+            if(gi === b) return g.concat([best[a][ai]]);
+            return g;
+          });
+          if(moved[a].length === 0) continue;
+          var ms = scoreGroups(D, moved, opt);
+          if(betterScore(ms, bestScore)){ best = moved; bestScore = ms; improved = true; }
+        }
+      }
+    }
+
+    for(var x=0;x<K && !improved;x++){
+      for(var xi=0;xi<best[x].length && !improved;xi++){
+        for(var y=x+1;y<K && !improved;y++){
+          for(var yi=0;yi<best[y].length && !improved;yi++){
+            var sw = best.map(function(g){ return g.slice(); });
+            var t = sw[x][xi]; sw[x][xi] = sw[y][yi]; sw[y][yi] = t;
+            var ss = scoreGroups(D, sw, opt);
+            if(betterScore(ss, bestScore)){ best = sw; bestScore = ss; improved = true; }
+          }
+        }
+      }
+    }
+  }
+
+  return best.filter(function(g){ return g.length; });
+}
+
 function parseTime(v){
   var m = String(v||'').match(/(\d{1,2})\s*[:시]?\s*(\d{1,2})?/);
   if(!m) return null;
@@ -931,52 +1116,92 @@ function show(html){
   setTab('result');
 }
 
-function render(center, people, order, total, exact, opt){
-  var driveMin = total / opt.speed * 60;
-  var totalMin = driveMin + opt.stopMin * people.length;
+function render(center, people, cars, opt){
+  var multi = cars.length > 1;
+  var visited = cars.reduce(function(n, c){ return n + c.order.length; }, 0);
+  var total = cars.reduce(function(d, c){ return d + c.dist; }, 0);
+  var allExact = cars.every(function(c){ return c.exact; });
 
-  var seq = [{who:center.name || '센터', where:center.addr, end:true}];
-  order.forEach(function(i){ seq.push({who:people[i-1].name, where:people[i-1].addr, end:false}); });
-  seq.push({who:center.name || '센터', where:'복귀', end:true});
-
-  var pts = [center.hit].concat(order.map(function(i){ return people[i-1].hit; }));
-  pts.push(center.hit);
-
-  var clock = opt.start;
-  var h = '<div class="summary">' +
-          '<div><span>방문</span><strong>' + people.length + '명</strong></div>' +
-          '<div><span>이동거리</span><strong>' + total.toFixed(1) + 'km</strong></div>' +
-          '<div><span>예상 소요</span><strong>' + fmtDur(totalMin) + '</strong></div>' +
-          '</div><ul class="route">';
-
-  for(var i=0;i<seq.length;i++){
-    var s = seq[i];
-    var bead = s.end ? (i === 0 ? '출발' : '도착') : String(i);
-    var t = clock === null ? '' : '<em>' + fmtTime(clock) + '</em>';
-    var railStyle = (i === 0 ? 'top:50%;' : '') + (i === seq.length-1 ? 'bottom:50%;' : '');
-    // 목록을 누르면 지도에서 그 지점을 찾아 준다. 마지막 줄은 센터로 돌아오는 것이라 0번을 가리킨다.
-    var mi = (i === seq.length-1) ? 0 : i;
-    h += '<li class="stop' + (s.end ? ' end' : '') + '" data-m="' + mi + '">' +
-         '<div class="mark"><div class="rail" style="' + railStyle + '"></div>' +
-         '<div class="bead">' + bead + '</div></div>' +
-         '<div class="txt"><div class="who">' + esc(s.who) + t + '</div>' +
-         (s.where ? '<div class="where">' + esc(s.where) + '</div>' : '') + '</div></li>';
-
-    if(i < seq.length - 1){
-      var d = haversine(pts[i], pts[i+1]) * opt.factor;
-      var legMin = d / opt.speed * 60;
-      if(clock !== null) clock += legMin + (i > 0 ? opt.stopMin : 0);
-      h += '<li class="leg"><div class="mark"><div class="rail"></div></div>' +
-           '<div class="txt">' + d.toFixed(1) + 'km · 약 ' + Math.round(legMin) + '분</div></li>';
+  var longest = 0, lastBack = null;
+  cars.forEach(function(c){
+    var m = carMinutes(c.dist, c.order.length, opt);
+    if(m > longest) longest = m;
+    if(opt.start !== null){
+      var back = opt.start + m;
+      if(lastBack === null || back > lastBack) lastBack = back;
     }
-  }
-  h += '</ul>';
+  });
+
+  var h = '<div class="summary">' +
+          '<div><span>방문</span><strong>' + visited + '명</strong></div>' +
+          '<div><span>' + (multi ? '총 이동거리' : '이동거리') + '</span><strong>' +
+            total.toFixed(1) + 'km</strong></div>' +
+          '<div><span>' + (multi ? '가장 늦은 복귀' : '예상 소요') + '</span><strong>' +
+            (multi ? (lastBack === null ? fmtDur(longest) : fmtTime(lastBack)) : fmtDur(longest)) +
+          '</strong></div></div>';
+
+  // 마커는 센터가 0번이고 그다음 1호차, 2호차 순으로 담겨 있다.
+  // 목록의 data-m 이 그 순서를 그대로 가리켜야 한다.
+  var markBase = 1;
+
+  cars.forEach(function(car, ci){
+    var color = CAR_COLORS[ci % CAR_COLORS.length];
+    var carDist = car.dist;
+    var carMin = carMinutes(carDist, car.order.length, opt);
+
+    if(multi){
+      h += '<div class="carhead' + (ci === 0 ? ' first' : '') + '">' +
+           '<span class="cartag" style="background:' + color + '">' + (ci+1) + '</span>' +
+           '<span class="carname">' + (ci+1) + '호차</span>' +
+           '<span class="carmeta">' + car.order.length + '명 · ' + carDist.toFixed(1) + 'km · ' +
+           fmtDur(carMin) + '</span></div>';
+    }
+
+    var seq = [{who:center.name || '센터', where:center.addr, end:true}];
+    car.order.forEach(function(i){
+      seq.push({who:people[i-1].name, where:people[i-1].addr, end:false});
+    });
+    seq.push({who:center.name || '센터', where:'복귀', end:true});
+
+    var pts = [center.hit].concat(car.order.map(function(i){ return people[i-1].hit; }));
+    pts.push(center.hit);
+
+    var clock = opt.start;
+    h += '<ul class="route">';
+
+    for(var i=0;i<seq.length;i++){
+      var s = seq[i];
+      var bead = s.end ? (i === 0 ? '출발' : '도착') : String(i);
+      var t = clock === null ? '' : '<em>' + fmtTime(clock) + '</em>';
+      var railStyle = (i === 0 ? 'top:50%;' : '') + (i === seq.length-1 ? 'bottom:50%;' : '');
+      // 마지막 줄은 센터로 돌아오는 것이라 센터 마커(0번)를 가리킨다
+      var mi = (i === 0 || i === seq.length-1) ? 0 : (markBase + i - 1);
+      h += '<li class="stop' + (s.end ? ' end' : '') + '" data-m="' + mi + '">' +
+           '<div class="mark"><div class="rail" style="' + railStyle + '"></div>' +
+           '<div class="bead"' + (s.end ? '' : ' style="background:' + color + '"') + '>' +
+           bead + '</div></div>' +
+           '<div class="txt"><div class="who">' + esc(s.who) + t + '</div>' +
+           (s.where ? '<div class="where">' + esc(s.where) + '</div>' : '') + '</div></li>';
+
+      if(i < seq.length - 1){
+        var d = haversine(pts[i], pts[i+1]) * opt.factor;
+        var legMin = d / opt.speed * 60;
+        if(clock !== null) clock += legMin + (i > 0 ? opt.stopMin : 0);
+        h += '<li class="leg"><div class="mark"><div class="rail"></div></div>' +
+             '<div class="txt">' + d.toFixed(1) + 'km · 약 ' + Math.round(legMin) + '분</div></li>';
+      }
+    }
+    h += '</ul>';
+    markBase += car.order.length;
+  });
+
   h += '<div class="rowbtns noprint"><button type="button" class="chip" id="printBtn">인쇄</button>' +
        '<button type="button" class="chip quiet" id="copyBtn">순서 복사</button></div>';
   h += '<p class="note">주소는 ' + (kakaoOk ? '카카오 지도' : '공개 지도 데이터') + '에서 찾았습니다. ' +
        '거리는 두 지점의 직선거리에 보정 계수 ' + opt.factor +
        '를 곱한 추정값입니다. 실제 도로와 교통 상황은 반영되지 않으니 순서를 잡는 참고 자료로 쓰시고, 최종 판단은 운행 담당자가 해 주세요.' +
-       (exact ? '' : ' 인원이 15명 이상이라 근사 계산을 했습니다. 최적에 가깝지만 완전한 최단 경로가 아닐 수 있습니다.') + '</p>';
+       (multi ? ' 차량 배정은 가장 오래 걸리는 차의 시간을 줄이는 쪽으로 잡았습니다. 총 주행거리가 가장 짧은 배정과는 다를 수 있습니다.' : '') +
+       (allExact ? '' : ' 한 차량이 15명을 넘어 근사 계산을 했습니다. 최적에 가깝지만 완전한 최단 경로가 아닐 수 있습니다.') + '</p>';
 
   show(h);
 
@@ -985,8 +1210,17 @@ function render(center, people, order, total, exact, opt){
 
   var cb = document.getElementById('copyBtn');
   if(cb) cb.addEventListener('click', function(){
-    var lines = [(center.name || '센터') + ' 송영 경로 · ' + people.length + '명 · ' + total.toFixed(1) + 'km'];
-    order.forEach(function(pi, k){ lines.push((k+1) + '. ' + people[pi-1].name + ' — ' + people[pi-1].addr); });
+    var lines = [(center.name || '센터') + ' 송영 경로 · ' +
+                 (multi ? cars.length + '대 · ' : '') + visited + '명 · ' + total.toFixed(1) + 'km'];
+    cars.forEach(function(car, ci){
+      if(multi){
+        lines.push('');
+        lines.push('[' + (ci+1) + '호차] ' + car.order.length + '명 · ' + car.dist.toFixed(1) + 'km');
+      }
+      car.order.forEach(function(pi, k){
+        lines.push((k+1) + '. ' + people[pi-1].name + ' — ' + people[pi-1].addr);
+      });
+    });
     var text = lines.join('\n');
     var done = function(){ cb.textContent = '복사했습니다'; setTimeout(function(){ cb.textContent = '순서 복사'; }, 1600); };
     if(navigator.clipboard && navigator.clipboard.writeText){
@@ -1000,9 +1234,9 @@ function render(center, people, order, total, exact, opt){
   document.getElementById('printhead').innerHTML =
     '<h2>' + esc(center.name || '센터') + ' 송영 경로</h2><p>' +
     dt.getFullYear() + '년 ' + (dt.getMonth()+1) + '월 ' + dt.getDate() + '일 · ' +
-    people.length + '명 · ' + total.toFixed(1) + 'km</p>';
+    (multi ? cars.length + '대 · ' : '') + visited + '명 · ' + total.toFixed(1) + 'km</p>';
 
-  drawRoute(center.hit, people, order, total);
+  drawRoute(center.hit, people, cars, total);
 }
 
 /* 목록의 한 줄을 누르면 지도가 그 지점으로 움직인다 */
@@ -1028,7 +1262,7 @@ attachAc(document.getElementById('centerAc'), centerAddrI, function(hit){
   queueSave();
 });
 document.getElementById('centerName').addEventListener('input', queueSave);
-['startTime','speed','stopMin','factor'].forEach(function(id){
+['startTime','speed','stopMin','factor','cars','seats'].forEach(function(id){
   document.getElementById(id).addEventListener('input', queueSave);
 });
 
@@ -1057,7 +1291,9 @@ calcBtn.addEventListener('click', function(){
     speed: parseFloat(document.getElementById('speed').value) || 25,
     stopMin: parseFloat(document.getElementById('stopMin').value) || 0,
     factor: parseFloat(document.getElementById('factor').value) || 1.3,
-    start: parseTime(document.getElementById('startTime').value)
+    start: parseTime(document.getElementById('startTime').value),
+    cars: Math.min(Math.max(parseInt(document.getElementById('cars').value, 10) || 1, 1), 4),
+    seats: Math.min(Math.max(parseInt(document.getElementById('seats').value, 10) || 9, 1), 20)
   };
 
   saveState();
@@ -1104,11 +1340,24 @@ calcBtn.addEventListener('click', function(){
     var pts = [centerHit].concat(rows.map(function(p){ return p.hit; }));
     var D = matrix(pts, opt.factor);
     var N = rows.length;
-    var res = N === 1 ? {order:[1], dist:D[0][1] + D[1][0], exact:true}
-            : N <= 14 ? heldKarp(D, N)
-            : heuristic(D, N);
 
-    render({name:centerName, addr:centerAddr, hit:centerHit}, rows, res.order, res.dist, res.exact, opt);
+    if(N > opt.cars * opt.seats){
+      show('<div class="alert"><b>차량이 모자랍니다.</b>' +
+           opt.cars + '대에 정원 ' + opt.seats + '명씩이면 ' + (opt.cars * opt.seats) +
+           '명까지 태울 수 있는데 ' + N + '명을 넣으셨습니다. ' +
+           '차량 대수나 정원을 늘리거나, 두 번에 나눠 운행하는 것으로 잡아 주세요.</div>');
+      return;
+    }
+
+    var groups = splitCars(D, N, opt.cars, opt.seats, pts, opt);
+    var cars = groups.map(function(g){ return routeFor(D, g, true); });
+
+    // 오래 걸리는 차를 1호차로 올려 두면 인쇄물에서 보기 편하다
+    cars.sort(function(a, b){
+      return carMinutes(b.dist, b.order.length, opt) - carMinutes(a.dist, a.order.length, opt);
+    });
+
+    render({name:centerName, addr:centerAddr, hit:centerHit}, rows, cars, opt);
   }).catch(function(){
     calcBtn.disabled = false;
     statusEl.textContent = '';
