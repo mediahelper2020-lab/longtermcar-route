@@ -1,270 +1,286 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>송영 경로</title>
+<title>송영 경로 만들기</title>
+<meta name="description" content="주야간보호센터 송영 최적경로를 지도 위에서 계산합니다.">
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
+*{box-sizing:border-box}
 :root{
-  --bg:#eef1ef;
-  --surface:#ffffff;
-  --ink:#0d1512;
-  --sub:#697a73;
-  --line:#e4eae7;
-  --accent:#07796a;
-  --accent-dark:#055c50;
-  --tint:#e3f2ee;
-  --warn:#b04a2c;
-  --warn-tint:#fbeee9;
-  --r-lg:20px;
-  --r-md:14px;
-  --r-sm:10px;
+  --bg:#eef0f4; --panel:#fff; --ink:#16181d; --muted:#6b7280; --line:#e3e6eb;
+  --brand:#1668dc; --brand-dk:#0f4fa8; --route:#f4623a; --center:#0f9d8f;
+  --ok:#15803d; --bad:#dc2626; --shadow:0 2px 12px rgba(16,24,40,.10);
 }
-*{box-sizing:border-box;}
-html,body{margin:0;padding:0;}
-body{
-  background:var(--bg);
-  color:var(--ink);
-  font-family:'Pretendard Variable',Pretendard,'Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif;
-  font-size:15px;line-height:1.6;letter-spacing:-.01em;
-  -webkit-text-size-adjust:100%;
-  padding-bottom:120px;
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,system-ui,"Malgun Gothic",sans-serif;
+  font-size:15px;line-height:1.55;-webkit-text-size-adjust:100%}
+
+/* ----- 큰 틀: 왼쪽 패널 + 지도 ----- */
+.app{display:flex;height:100dvh;min-height:100vh}
+.panel{flex:0 0 404px;width:404px;background:var(--panel);display:flex;flex-direction:column;
+  box-shadow:2px 0 14px rgba(16,24,40,.07);z-index:500;position:relative}
+.mapwrap{flex:1;position:relative;min-width:0}
+#map{position:absolute;inset:0;background:#dfe3e8}
+
+/* ----- 패널 머리말 ----- */
+.brand{padding:16px 18px 12px;border-bottom:1px solid var(--line)}
+.brand h1{margin:0;font-size:18px;font-weight:800;letter-spacing:-.02em}
+.brand .lede{margin:3px 0 0;font-size:12.5px;color:var(--muted)}
+.srcline{margin:9px 0 0;font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center}
+.srcline::before{content:"";width:7px;height:7px;border-radius:50%;background:#cbd2da;flex:none}
+.srcline.ok::before{background:var(--ok)}
+
+/* ----- 탭 ----- */
+.tabs{display:flex;gap:2px;padding:10px 12px 0;border-bottom:1px solid var(--line)}
+.tab{flex:1;border:0;background:none;padding:9px 0 11px;font:inherit;font-size:13.5px;font-weight:700;
+  color:var(--muted);cursor:pointer;border-bottom:2.5px solid transparent;margin-bottom:-1px}
+.tab.on{color:var(--brand);border-bottom-color:var(--brand)}
+.tab:disabled{opacity:.45;cursor:default}
+
+.pbody{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:14px 16px 18px}
+.pane{display:none}
+.pane.on{display:block}
+
+/* ----- 입력 ----- */
+.blk{margin-bottom:18px}
+.blk h2{margin:0 0 2px;font-size:13px;font-weight:800}
+.blk .sub{margin:0 0 9px;font-size:12px;color:var(--muted)}
+input[type=text],input[type=number],textarea{width:100%;padding:10px 11px;border:1px solid var(--line);
+  border-radius:9px;background:#fbfcfd;font:inherit;font-size:14px;color:var(--ink)}
+textarea{min-height:96px;resize:vertical;line-height:1.5}
+input:focus,textarea:focus{outline:none;border-color:var(--brand);background:#fff;
+  box-shadow:0 0 0 3px rgba(22,104,220,.13)}
+.field{margin-bottom:7px}
+
+.ac{position:relative}
+.aclist{display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);background:#fff;
+  border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);z-index:900;
+  max-height:230px;overflow-y:auto}
+.aclist.on{display:block}
+.acitem{padding:8px 11px;cursor:pointer;border-bottom:1px solid #f1f3f6}
+.acitem:last-child{border-bottom:0}
+.acitem b{display:block;font-size:13.5px;font-weight:600}
+.acitem span{display:block;font-size:11.5px;color:var(--muted);margin-top:1px}
+.acitem.sel,.acitem:hover{background:#f0f6ff}
+.acnote{padding:9px 11px;font-size:12px;color:var(--muted)}
+
+.person{display:grid;grid-template-columns:88px 1fr 34px;gap:6px;align-items:start;margin-bottom:7px}
+.person .pin{grid-column:1/-1}
+.pin{font-size:11.5px;color:var(--muted);padding-left:2px}
+.pin.ok{color:var(--ok)}
+.pin.bad{color:var(--bad)}
+.pin:empty{display:none}
+.iconbtn{border:1px solid var(--line);background:#fff;border-radius:8px;height:39px;cursor:pointer;
+  color:var(--muted);font-size:17px;line-height:1}
+.iconbtn:hover{border-color:var(--bad);color:var(--bad)}
+
+.rowbtns{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 13px;font:inherit;
+  font-size:12.5px;font-weight:600;cursor:pointer;color:var(--ink)}
+.chip:hover{border-color:var(--brand);color:var(--brand)}
+.chip.quiet{color:var(--muted)}
+
+.more{border:1px solid var(--line);border-radius:10px;margin-bottom:14px;background:#fbfcfd}
+.more summary{padding:10px 12px;font-size:13px;font-weight:700;cursor:pointer;list-style:none}
+.more summary::-webkit-details-marker{display:none}
+.more summary::before{content:"+ ";color:var(--muted)}
+.more[open] summary::before{content:"\2212 "}
+.more .inner{padding:0 12px 12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.grid2 label{display:block;font-size:11.5px;color:var(--muted);margin-bottom:3px}
+.tiny{font-size:11.5px;color:var(--muted);margin:8px 0 0}
+
+/* ----- 아래 고정 버튼 ----- */
+.pfoot{border-top:1px solid var(--line);padding:11px 16px;background:#fff;
+  padding-bottom:calc(11px + env(safe-area-inset-bottom))}
+.go{width:100%;border:0;border-radius:10px;background:var(--brand);color:#fff;font:inherit;
+  font-size:15px;font-weight:800;padding:12px;cursor:pointer}
+.go:hover{background:var(--brand-dk)}
+.go:disabled{background:#9fb6d8;cursor:default}
+.status{font-size:12px;color:var(--muted);text-align:center;margin-top:6px;min-height:16px}
+
+/* ----- 결과 ----- */
+.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:14px}
+.summary div{background:#f4f7fb;border-radius:10px;padding:9px 10px;text-align:center}
+.summary span{display:block;font-size:11px;color:var(--muted)}
+.summary strong{display:block;font-size:16px;font-weight:800;margin-top:1px;letter-spacing:-.02em}
+.route{list-style:none;margin:0;padding:0}
+.stop{display:flex;gap:10px;cursor:pointer;border-radius:9px;padding:2px 4px}
+.stop:hover{background:#f4f7fb}
+.stop.cur{background:#eaf2ff}
+.mark{width:28px;flex:none;position:relative;display:flex;justify-content:center}
+.rail{position:absolute;top:0;bottom:0;width:2px;background:var(--line)}
+.bead{position:relative;width:26px;height:26px;border-radius:50%;background:var(--route);color:#fff;
+  font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;margin:3px 0}
+.stop.end .bead{background:var(--center);font-size:10.5px}
+.txt{flex:1;padding:4px 0 6px;min-width:0}
+.who{font-size:14px;font-weight:700;display:flex;justify-content:space-between;gap:8px}
+.who em{font-style:normal;font-size:12.5px;font-weight:700;color:var(--brand);flex:none}
+.where{font-size:12px;color:var(--muted);word-break:keep-all}
+.leg{display:flex;gap:10px}
+.leg .txt{font-size:11.5px;color:var(--muted);padding:0 0 2px}
+.note{font-size:11.5px;color:var(--muted);margin:14px 0 0;padding-top:12px;
+  border-top:1px solid var(--line);word-break:keep-all}
+.alert{background:#fef3f2;border:1px solid #fecdca;border-radius:10px;padding:12px;font-size:13px;color:#912018}
+.alert b{display:block;margin-bottom:4px}
+.alert ul{margin:7px 0 0;padding-left:17px}
+.empty{text-align:center;color:var(--muted);font-size:13px;padding:44px 10px;word-break:keep-all}
+.printhead{display:none}
+
+/* ----- 지도 위 표시 ----- */
+.mk{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:13px;font-weight:800;border:2.5px solid #fff;
+  box-shadow:0 2px 6px rgba(16,24,40,.35)}
+.mk-stop{background:var(--route)}
+.mk-center{background:var(--center);font-size:10.5px}
+.mk-dot{width:17px;height:17px;border-width:2px;background:#9aa4b2}
+.maptop{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:600;
+  background:rgba(255,255,255,.96);border-radius:999px;padding:7px 16px;box-shadow:var(--shadow);
+  font-size:13px;font-weight:700;white-space:nowrap;display:none}
+.maptop.on{display:block}
+.legend{position:absolute;left:12px;bottom:16px;z-index:600;background:rgba(255,255,255,.96);
+  border-radius:10px;padding:8px 11px;box-shadow:var(--shadow);font-size:11.5px;color:var(--muted)}
+.legend div{display:flex;align-items:center;gap:6px}
+.legend div+div{margin-top:4px}
+.legend i{width:11px;height:11px;border-radius:50%;flex:none}
+.leaflet-container{font-family:inherit}
+
+/* ----- 좁은 화면: 지도를 위로 ----- */
+@media (max-width:900px){
+  html,body{height:auto}
+  .app{flex-direction:column;height:auto;min-height:100dvh}
+  .mapwrap{height:44dvh;min-height:270px;flex:none;order:-1}
+  .panel{flex:1;width:auto;box-shadow:none;border-top:1px solid var(--line)}
+  .pbody{overflow:visible}
+  .pfoot{position:sticky;bottom:0}
+  .legend{display:none}
 }
-.wrap{max-width:680px;margin:0 auto;padding:40px 18px 0;}
 
-h1{font-size:31px;font-weight:800;letter-spacing:-.035em;margin:0 0 8px;line-height:1.25;}
-.lede{margin:0 0 26px;color:var(--sub);font-size:15.5px;max-width:34ch;}
-
-.card{
-  background:var(--surface);border-radius:var(--r-lg);
-  padding:22px 20px;margin-bottom:14px;
-  box-shadow:0 1px 2px rgba(13,21,18,.04);
-}
-.card h2{font-size:17px;font-weight:700;margin:0 0 2px;letter-spacing:-.02em;}
-.card .sub{margin:0 0 16px;color:var(--sub);font-size:13.5px;}
-
-label{display:block;font-size:13px;font-weight:600;color:var(--sub);margin-bottom:6px;}
-input[type=text],input[type=number],textarea{
-  width:100%;padding:13px 14px;font:inherit;font-size:15px;
-  border:1.5px solid var(--line);border-radius:var(--r-md);
-  background:#fbfcfc;color:var(--ink);transition:border-color .15s,background .15s;
-}
-input::placeholder{color:#a9b5b0;}
-input:focus,textarea:focus{outline:none;border-color:var(--accent);background:#fff;}
-button:focus-visible,a:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px;}
-textarea{min-height:96px;resize:vertical;font-size:14px;line-height:1.55;}
-.field+.field{margin-top:12px;}
-
-.ac{position:relative;}
-.aclist{
-  position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:30;
-  background:#fff;border:1px solid var(--line);border-radius:var(--r-md);
-  box-shadow:0 12px 28px rgba(13,21,18,.13);
-  max-height:246px;overflow:auto;padding:5px;display:none;
-}
-.aclist.on{display:block;}
-.acitem{padding:10px 11px;border-radius:9px;cursor:pointer;font-size:14px;line-height:1.4;}
-.acitem:hover,.acitem.sel{background:var(--tint);}
-.acitem b{display:block;font-weight:600;}
-.acitem span{color:var(--sub);font-size:12.5px;}
-.acnote{padding:9px 11px;color:var(--sub);font-size:13px;}
-
-.people{display:flex;flex-direction:column;gap:10px;}
-.person{display:grid;grid-template-columns:104px minmax(0,1fr) 38px;gap:8px;align-items:start;}
-@media (max-width:520px){
-  .person{grid-template-columns:96px minmax(0,1fr) 34px;gap:6px;}
-  input[type=text]{padding:12px 11px;font-size:14.5px;}
-}
-.person .pin{font-size:12px;color:var(--sub);margin:6px 2px 0;line-height:1.45;grid-column:1 / -1;}
-.pin.ok{color:var(--accent);}
-.pin.bad{color:var(--warn);}
-
-.srcline{font-size:12.5px;color:var(--sub);margin:-18px 0 24px;}
-.srcline.ok{color:var(--accent);}
-.keyrow{display:flex;gap:8px;align-items:center;}
-.keyrow input{flex:1;min-width:0;}
-.badge{
-  display:inline-block;vertical-align:2px;margin-left:8px;
-  font-size:11.5px;font-weight:700;letter-spacing:0;
-  padding:3px 9px;border-radius:999px;background:#eef2f0;color:var(--sub);
-}
-.badge.on{background:var(--tint);color:var(--accent-dark);}
-.badge.off{background:var(--warn-tint);color:var(--warn);}
-.keyhelp{font-size:12.5px;color:var(--sub);line-height:1.55;margin:12px 0 0;}
-.keyhelp ol{margin:6px 0 0;padding-left:17px;}
-.keyhelp li{margin-bottom:3px;}
-.keyhelp a{color:var(--accent);}
-.iconbtn{
-  width:38px;height:46px;border:0;background:transparent;color:#b3beb9;
-  font-size:20px;border-radius:var(--r-sm);cursor:pointer;line-height:1;
-}
-.iconbtn:hover{background:var(--warn-tint);color:var(--warn);}
-
-.rowbtns{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
-.chip{
-  border:1.5px solid var(--line);background:#fff;color:var(--ink);
-  border-radius:999px;padding:9px 15px;font:inherit;font-size:14px;font-weight:600;cursor:pointer;
-}
-.chip:hover{border-color:var(--accent);color:var(--accent);}
-.chip.quiet{border-color:transparent;color:var(--sub);}
-.chip.quiet:hover{background:#eef2f0;color:var(--ink);}
-
-details.more{margin-bottom:14px;}
-details.more>summary{
-  list-style:none;cursor:pointer;color:var(--sub);font-size:14px;font-weight:600;
-  padding:12px 18px;background:#fff;border-radius:var(--r-lg);
-}
-details.more>summary::-webkit-details-marker{display:none;}
-details.more>summary::after{content:'  ⌄';}
-details.more[open]>summary{border-radius:var(--r-lg) var(--r-lg) 0 0;padding-bottom:4px;}
-details.more .inner{background:#fff;border-radius:0 0 var(--r-lg) var(--r-lg);padding:8px 20px 22px;}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-@media (max-width:520px){.grid2{grid-template-columns:1fr;}}
-.tiny{font-size:12px;color:var(--sub);margin:5px 2px 0;line-height:1.45;}
-
-.bar{
-  position:fixed;left:0;right:0;bottom:0;z-index:40;
-  padding:14px 18px calc(14px + env(safe-area-inset-bottom));
-  background:rgba(238,241,239,.86);backdrop-filter:blur(12px);
-  border-top:1px solid rgba(13,21,18,.06);
-}
-.bar .inner{max-width:680px;margin:0 auto;display:flex;gap:12px;align-items:center;}
-.go{
-  flex:1;border:0;border-radius:var(--r-md);background:var(--accent);color:#fff;
-  font:inherit;font-size:16px;font-weight:700;padding:16px;cursor:pointer;letter-spacing:-.02em;
-}
-.go:hover{background:var(--accent-dark);}
-.go[disabled]{background:#9fb5af;cursor:progress;}
-.status{font-size:13px;color:var(--sub);min-width:0;}
-
-#result{display:none;}
-#result.on{display:block;}
-.summary{display:flex;gap:26px;flex-wrap:wrap;margin:2px 0 20px;}
-.summary div span{display:block;font-size:12.5px;color:var(--sub);margin-bottom:1px;}
-.summary div strong{font-size:26px;font-weight:800;letter-spacing:-.03em;font-variant-numeric:tabular-nums;}
-
-.route{list-style:none;margin:0;padding:0;}
-.stop{display:grid;grid-template-columns:30px minmax(0,1fr);gap:14px;}
-.mark{display:flex;justify-content:center;position:relative;}
-.bead{
-  width:28px;height:28px;border-radius:50%;flex:0 0 28px;
-  background:var(--tint);color:var(--accent-dark);
-  font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;
-  font-variant-numeric:tabular-nums;z-index:1;
-}
-.stop.end .bead{background:var(--accent);color:#fff;font-size:11px;}
-.mark .rail{position:absolute;top:0;bottom:0;width:2px;background:var(--line);}
-.stop .txt{padding-bottom:2px;min-width:0;}
-.stop .who{font-weight:700;font-size:16px;letter-spacing:-.02em;}
-.stop .who em{font-style:normal;font-weight:600;font-size:13px;color:var(--accent);margin-left:6px;}
-.stop .where{font-size:13.5px;color:var(--sub);word-break:keep-all;}
-.leg{display:grid;grid-template-columns:30px minmax(0,1fr);gap:14px;}
-.leg .txt{font-size:12.5px;color:var(--sub);padding:8px 0;font-variant-numeric:tabular-nums;}
-.reveal{opacity:0;transform:translateY(6px);animation:rise .38s ease forwards;}
-@keyframes rise{to{opacity:1;transform:none;}}
-@media (prefers-reduced-motion:reduce){.reveal{animation:none;opacity:1;transform:none;}}
-
-.note{font-size:12.5px;color:var(--sub);line-height:1.55;margin:20px 0 0;padding-top:14px;border-top:1px solid var(--line);}
-.alert{background:var(--warn-tint);border-radius:var(--r-md);padding:14px 16px;font-size:14px;color:#7c3520;}
-.alert b{display:block;margin-bottom:4px;}
-.alert ul{margin:6px 0 0;padding-left:18px;}
-
+/* ----- 인쇄 ----- */
 @media print{
-  body{background:#fff;padding:0;}
-  .wrap{padding:0;max-width:none;}
-  h1,.lede,details.more,.bar,.noprint{display:none !important;}
-  .card{display:none;}
-  #result{display:block !important;box-shadow:none;padding:0;}
-  .printhead{display:block !important;margin-bottom:14px;}
-  .reveal{animation:none;opacity:1;transform:none;}
+  .mapwrap,.tabs,.pfoot,.srcline,.noprint,.more,.rowbtns{display:none!important}
+  .app{display:block;height:auto}
+  .panel{width:auto;flex:none;box-shadow:none}
+  .pbody{overflow:visible;padding:0}
+  .pane{display:none!important}
+  #paneResult{display:block!important}
+  .printhead{display:block;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid var(--ink)}
+  .printhead h2{margin:0;font-size:19px}
+  .printhead p{margin:3px 0 0;font-size:12px;color:var(--muted)}
+  .stop{page-break-inside:avoid}
+  body{background:#fff}
 }
-.printhead{display:none;}
-.printhead h2{font-size:21px;margin:0 0 2px;}
-.printhead p{margin:0;color:var(--sub);font-size:13px;}
 </style>
 </head>
 <body>
 
-<div class="wrap">
-  <h1>송영 경로 만들기</h1>
-  <p class="lede">센터와 어르신 주소만 적으면 가장 짧은 방문 순서를 찾아 드립니다.</p>
-  <p class="srcline" id="srcline"></p>
-
-  <section class="card">
-    <h2>센터</h2>
-    <p class="sub">출발지이자 도착지입니다.</p>
-    <div class="field">
-      <input type="text" id="centerName" placeholder="센터 이름 (예: 햇살주야간보호센터)">
+<div class="app">
+  <aside class="panel">
+    <div class="brand">
+      <h1>송영 경로 만들기</h1>
+      <p class="lede">센터와 어르신 주소만 적으면 가장 짧은 방문 순서를 찾아 드립니다.</p>
+      <p class="srcline" id="srcline">주소 검색 준비 중</p>
     </div>
-    <div class="field ac" id="centerAc">
-      <input type="text" id="centerAddr" placeholder="센터 주소" autocomplete="off">
-      <div class="aclist"></div>
-    </div>
-    <div class="pin" id="centerPin"></div>
-  </section>
 
-  <section class="card">
-    <h2>어르신</h2>
-    <p class="sub">이름과 주소를 적어 주세요. 주소를 입력하면 후보가 뜹니다.</p>
-    <div class="people" id="people"></div>
-    <div class="rowbtns">
-      <button type="button" class="chip" id="addRow">어르신 추가</button>
-      <button type="button" class="chip quiet" id="sample">예시 채우기</button>
-      <button type="button" class="chip quiet" id="reset">비우기</button>
+    <div class="tabs">
+      <button type="button" class="tab on" id="tabInput">입력</button>
+      <button type="button" class="tab" id="tabResult" disabled>결과</button>
     </div>
-  </section>
 
-  <details class="more">
-    <summary>명단 한 번에 붙여넣기</summary>
-    <div class="inner">
-      <p class="tiny" style="margin-bottom:8px">한 줄에 한 명씩 이름, 주소 순서로 붙여넣으세요. 엑셀에서 복사한 표도 됩니다.</p>
-      <textarea id="bulk" placeholder="홍길동, 전주시 완산구 서원로 10&#10;김영희, 전주시 완산구 백제대로 250"></textarea>
-      <div class="rowbtns"><button type="button" class="chip" id="bulkGo">명단 불러오기</button></div>
-    </div>
-  </details>
+    <div class="pbody">
 
-  <details class="more">
-    <summary>세부 설정</summary>
-    <div class="inner">
-      <div class="grid2">
-        <div class="field">
-          <label for="startTime">출발 시각</label>
-          <input type="text" id="startTime" value="08:00">
+      <!-- ===== 입력 ===== -->
+      <div class="pane on" id="paneInput">
+        <div class="blk">
+          <h2>센터</h2>
+          <p class="sub">출발지이자 도착지입니다.</p>
+          <div class="field">
+            <input type="text" id="centerName" placeholder="센터 이름 (예: 햇살주야간보호센터)">
+          </div>
+          <div class="field ac" id="centerAc">
+            <input type="text" id="centerAddr" placeholder="센터 주소" autocomplete="off">
+            <div class="aclist"></div>
+          </div>
+          <div class="pin" id="centerPin"></div>
         </div>
-        <div class="field">
-          <label for="speed">평균 속도 (km/h)</label>
-          <input type="number" id="speed" value="25" min="5" max="80">
+
+        <div class="blk">
+          <h2>어르신</h2>
+          <p class="sub">주소를 입력하면 후보가 뜹니다. 후보를 누르면 지도에 바로 찍힙니다.</p>
+          <div class="people" id="people"></div>
+          <div class="rowbtns">
+            <button type="button" class="chip" id="addRow">어르신 추가</button>
+            <button type="button" class="chip quiet" id="sample">예시 채우기</button>
+            <button type="button" class="chip quiet" id="reset">비우기</button>
+          </div>
         </div>
-        <div class="field">
-          <label for="stopMin">1인당 승하차 (분)</label>
-          <input type="number" id="stopMin" value="3" min="0" max="20">
-        </div>
-        <div class="field">
-          <label for="factor">도로 보정 계수</label>
-          <input type="number" id="factor" value="1.3" min="1" max="2" step="0.05">
+
+        <details class="more">
+          <summary>명단 한 번에 붙여넣기</summary>
+          <div class="inner">
+            <p class="tiny" style="margin:0 0 8px">한 줄에 한 명씩 이름, 주소 순서로 붙여넣으세요. 엑셀에서 복사한 표도 됩니다.</p>
+            <textarea id="bulk" placeholder="홍길동, 전주시 완산구 서원로 10&#10;김영희, 전주시 완산구 백제대로 250"></textarea>
+            <div class="rowbtns"><button type="button" class="chip" id="bulkGo">명단 불러오기</button></div>
+          </div>
+        </details>
+
+        <details class="more">
+          <summary>세부 설정</summary>
+          <div class="inner">
+            <div class="grid2">
+              <div class="field">
+                <label for="startTime">출발 시각</label>
+                <input type="text" id="startTime" value="08:00">
+              </div>
+              <div class="field">
+                <label for="speed">평균 속도 (km/h)</label>
+                <input type="number" id="speed" value="25" min="5" max="80">
+              </div>
+              <div class="field">
+                <label for="stopMin">1인당 승하차 (분)</label>
+                <input type="number" id="stopMin" value="3" min="0" max="20">
+              </div>
+              <div class="field">
+                <label for="factor">도로 보정 계수</label>
+                <input type="number" id="factor" value="1.3" min="1" max="2" step="0.05">
+              </div>
+            </div>
+            <p class="tiny">보정 계수는 직선거리를 실제 도로 거리에 가깝게 맞추는 값입니다. 도심 1.3, 외곽 1.2 정도가 무난합니다.</p>
+          </div>
+        </details>
+      </div>
+
+      <!-- ===== 결과 ===== -->
+      <div class="pane" id="paneResult">
+        <div class="printhead" id="printhead"></div>
+        <div id="resultBody">
+          <div class="empty">아래 <b>최적경로 계산</b>을 누르면<br>방문 순서가 여기에 나옵니다.</div>
         </div>
       </div>
-      <p class="tiny">보정 계수는 직선거리를 실제 도로 거리에 가깝게 맞추는 값입니다. 도심 1.3, 외곽 1.2 정도가 무난합니다.</p>
-    </div>
-  </details>
 
-  <section class="card" id="result">
-    <div class="printhead">
-      <h2 id="printTitle">송영 경로</h2>
-      <p id="printDate"></p>
     </div>
-    <div id="resultBody"></div>
-  </section>
+
+    <div class="pfoot">
+      <button type="button" class="go" id="calc">최적경로 계산</button>
+      <div class="status" id="status"></div>
+    </div>
+  </aside>
+
+  <main class="mapwrap">
+    <div id="map"></div>
+    <div class="maptop" id="maptop"></div>
+    <div class="legend">
+      <div><i style="background:#0f9d8f"></i> 센터 (출발·도착)</div>
+      <div><i style="background:#f4623a"></i> 어르신 방문 순서</div>
+    </div>
+  </main>
 </div>
 
-<div class="bar">
-  <div class="inner">
-    <button type="button" class="go" id="calc">최적경로 계산</button>
-    <div class="status" id="status"></div>
-  </div>
-</div>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
 (function(){
 "use strict";
@@ -413,6 +429,131 @@ function esc(s){
   });
 }
 
+/* ================= 지도 ================= */
+var mapObj = null, routeLayer = null, markers = [], routeShown = false;
+var mapTop = document.getElementById('maptop');
+
+function ensureMap(){
+  if(mapObj || typeof L === 'undefined') return mapObj;
+  mapObj = L.map('map', {zoomControl:false}).setView([36.5, 127.8], 7);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> 기여자'
+  }).addTo(mapObj);
+  L.control.zoom({position:'bottomright'}).addTo(mapObj);
+  routeLayer = L.layerGroup().addTo(mapObj);
+  return mapObj;
+}
+
+function pinIcon(label, kind){
+  var size = kind === 'dot' ? 17 : 30;
+  return L.divIcon({
+    className:'',
+    html:'<div class="mk mk-' + kind + '">' + esc(label) + '</div>',
+    iconSize:[size,size], iconAnchor:[size/2,size/2], popupAnchor:[0,-(size/2)+2]
+  });
+}
+
+function addMk(hit, label, title, kind){
+  var m = L.marker([hit.lat, hit.lng], {icon:pinIcon(label, kind), title:title}).addTo(routeLayer);
+  if(title) m.bindPopup('<b>' + esc(title) + '</b>' + (hit.title ? '<br>' + esc(hit.title) : ''));
+  markers.push(m);
+  return m;
+}
+
+function fit(pts){
+  if(!mapObj || !pts.length) return;
+  if(pts.length === 1) mapObj.setView(pts[0], 16);
+  else mapObj.fitBounds(L.latLngBounds(pts), {padding:[55,55], maxZoom:16});
+}
+
+/* 계산 전: 찍힌 위치만 회색 점으로 미리 보여 준다 */
+function drawPreview(){
+  if(routeShown || !ensureMap()) return;
+  routeLayer.clearLayers();
+  markers = [];
+  var pts = [];
+  if(centerHit){
+    addMk(centerHit, '센터', document.getElementById('centerName').value.trim() || '센터', 'center');
+    pts.push([centerHit.lat, centerHit.lng]);
+  }
+  Array.prototype.forEach.call(peopleEl.children, function(row){
+    var h = row._hit;
+    if(!h) return;
+    addMk(h, '', row.querySelector('.f-name').value.trim() || '어르신', 'dot');
+    pts.push([h.lat, h.lng]);
+  });
+  fit(pts);
+}
+
+/* 계산 후: 순서대로 선을 잇고 번호를 매긴다 */
+function drawRoute(ch, rows, order, total){
+  if(!ensureMap()) return;
+  routeLayer.clearLayers();
+  markers = [];
+
+  var pts = [[ch.lat, ch.lng]];
+  order.forEach(function(i){ pts.push([rows[i-1].hit.lat, rows[i-1].hit.lng]); });
+  pts.push([ch.lat, ch.lng]);
+
+  // 흰 테두리를 깔아야 지도 위에서 선이 또렷하게 보인다
+  L.polyline(pts, {color:'#fff', weight:9, opacity:.9, lineJoin:'round'}).addTo(routeLayer);
+  L.polyline(pts, {color:'#f4623a', weight:5, opacity:.95, lineJoin:'round'}).addTo(routeLayer);
+
+  addMk(ch, '센터', document.getElementById('centerName').value.trim() || '센터', 'center');
+  order.forEach(function(pi, k){
+    addMk(rows[pi-1].hit, String(k+1), rows[pi-1].name, 'stop');
+  });
+
+  fit(pts);
+  routeShown = true;
+  mapTop.textContent = rows.length + '명 · ' + total.toFixed(1) + 'km';
+  mapTop.className = 'maptop on';
+}
+
+/* ================= 자동 이어쓰기 ================= */
+var LS = 'songyeong.v1';
+
+function saveState(){
+  try{
+    var rows = [];
+    Array.prototype.forEach.call(peopleEl.children, function(row){
+      rows.push({n:row.querySelector('.f-name').value, a:row.querySelector('.f-addr').value});
+    });
+    localStorage.setItem(LS, JSON.stringify({
+      cn:document.getElementById('centerName').value,
+      ca:document.getElementById('centerAddr').value,
+      rows:rows,
+      st:document.getElementById('startTime').value,
+      sp:document.getElementById('speed').value,
+      sm:document.getElementById('stopMin').value,
+      fc:document.getElementById('factor').value
+    }));
+  }catch(e){ /* 저장이 막힌 브라우저에서도 앱은 그대로 동작한다 */ }
+}
+
+function loadState(){
+  var s = null;
+  try{ s = JSON.parse(localStorage.getItem(LS) || 'null'); }catch(e){ return false; }
+  if(!s || !s.rows || !s.rows.length) return false;
+  document.getElementById('centerName').value = s.cn || '';
+  document.getElementById('centerAddr').value = s.ca || '';
+  if(s.st) document.getElementById('startTime').value = s.st;
+  if(s.sp) document.getElementById('speed').value = s.sp;
+  if(s.sm) document.getElementById('stopMin').value = s.sm;
+  if(s.fc) document.getElementById('factor').value = s.fc;
+  peopleEl.innerHTML = '';
+  s.rows.forEach(function(r){ addRow(r.n || '', r.a || ''); });
+  return true;
+}
+
+var saveTimer = null;
+function queueSave(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveState, 400);
+}
+
+/* ================= 입력 칸 ================= */
 function attachAc(wrap, input, onPick){
   var list = wrap.querySelector('.aclist');
   var timer = null, items = [], sel = -1, lastQ = '';
@@ -496,18 +637,25 @@ function addRow(name, addr){
   attachAc(row.querySelector('.ac'), addrI, function(hit){
     if(hit){ setPin(pin, hit); row._hit = hit; }
     else { pin.textContent = ''; pin.className = 'pin'; row._hit = null; }
+    drawPreview();
+    queueSave();
   });
 
   row.querySelector('.iconbtn').addEventListener('click', function(){
     row.remove();
     if(!peopleEl.children.length) addRow();
+    drawPreview();
+    queueSave();
   });
+
+  nameI.addEventListener('input', queueSave);
 
   if(name) nameI.value = name;
   if(addr) addrI.value = addr;
   return row;
 }
 
+/* ================= 계산 ================= */
 function haversine(a,b){
   var R = 6371, r = Math.PI/180;
   var dLat = (b.lat-a.lat)*r, dLng = (b.lng-a.lng)*r;
@@ -564,18 +712,18 @@ function heuristic(D,N){
     for(var k=0;k<o.length-1;k++) s += D[o[k]][o[k+1]];
     return s + D[o[o.length-1]][0];
   }
-  var L = len(order), improved = true, guard = 0;
+  var L2 = len(order), improved = true, guard = 0;
   while(improved && guard++ < 300){
     improved = false;
     for(var a=0;a<order.length-1;a++){
       for(var b=a+1;b<order.length;b++){
         var cand = order.slice(0,a).concat(order.slice(a,b+1).reverse(), order.slice(b+1));
         var nl = len(cand);
-        if(nl < L - 1e-9){ order = cand; L = nl; improved = true; }
+        if(nl < L2 - 1e-9){ order = cand; L2 = nl; improved = true; }
       }
     }
   }
-  return {order:order, dist:L, exact:false};
+  return {order:order, dist:L2, exact:false};
 }
 
 function parseTime(v){
@@ -595,14 +743,31 @@ function fmtDur(x){
   return h ? h + '시간 ' + m + '분' : m + '분';
 }
 
-var resultEl = document.getElementById('result');
+/* ================= 화면 ================= */
 var bodyEl = document.getElementById('resultBody');
 var statusEl = document.getElementById('status');
+var tabInput = document.getElementById('tabInput');
+var tabResult = document.getElementById('tabResult');
+var paneInput = document.getElementById('paneInput');
+var paneResult = document.getElementById('paneResult');
+var pbody = document.querySelector('.pbody');
+
+function setTab(which){
+  var isIn = which === 'input';
+  tabInput.classList.toggle('on', isIn);
+  tabResult.classList.toggle('on', !isIn);
+  paneInput.classList.toggle('on', isIn);
+  paneResult.classList.toggle('on', !isIn);
+  pbody.scrollTop = 0;
+  if(mapObj) setTimeout(function(){ mapObj.invalidateSize(); }, 60);
+}
+tabInput.addEventListener('click', function(){ setTab('input'); });
+tabResult.addEventListener('click', function(){ setTab('result'); });
 
 function show(html){
   bodyEl.innerHTML = html;
-  resultEl.classList.add('on');
-  resultEl.scrollIntoView({behavior:'smooth', block:'start'});
+  tabResult.disabled = false;
+  setTab('result');
 }
 
 function render(center, people, order, total, exact, opt){
@@ -628,7 +793,9 @@ function render(center, people, order, total, exact, opt){
     var bead = s.end ? (i === 0 ? '출발' : '도착') : String(i);
     var t = clock === null ? '' : '<em>' + fmtTime(clock) + '</em>';
     var railStyle = (i === 0 ? 'top:50%;' : '') + (i === seq.length-1 ? 'bottom:50%;' : '');
-    h += '<li class="stop' + (s.end ? ' end' : '') + ' reveal" style="animation-delay:' + (i*45) + 'ms">' +
+    // 목록을 누르면 지도에서 그 지점을 찾아 준다. 마지막 줄은 센터로 돌아오는 것이라 0번을 가리킨다.
+    var mi = (i === seq.length-1) ? 0 : i;
+    h += '<li class="stop' + (s.end ? ' end' : '') + '" data-m="' + mi + '">' +
          '<div class="mark"><div class="rail" style="' + railStyle + '"></div>' +
          '<div class="bead">' + bead + '</div></div>' +
          '<div class="txt"><div class="who">' + esc(s.who) + t + '</div>' +
@@ -638,29 +805,58 @@ function render(center, people, order, total, exact, opt){
       var d = haversine(pts[i], pts[i+1]) * opt.factor;
       var legMin = d / opt.speed * 60;
       if(clock !== null) clock += legMin + (i > 0 ? opt.stopMin : 0);
-      h += '<li class="leg reveal" style="animation-delay:' + (i*45 + 22) + 'ms">' +
-           '<div class="mark"><div class="rail"></div></div>' +
+      h += '<li class="leg"><div class="mark"><div class="rail"></div></div>' +
            '<div class="txt">' + d.toFixed(1) + 'km · 약 ' + Math.round(legMin) + '분</div></li>';
     }
   }
   h += '</ul>';
-  h += '<div class="rowbtns noprint"><button type="button" class="chip" id="printBtn">인쇄</button></div>';
+  h += '<div class="rowbtns noprint"><button type="button" class="chip" id="printBtn">인쇄</button>' +
+       '<button type="button" class="chip quiet" id="copyBtn">순서 복사</button></div>';
   h += '<p class="note">주소는 ' + (kakaoOk ? '카카오 지도' : '공개 지도 데이터') + '에서 찾았습니다. ' +
        '거리는 두 지점의 직선거리에 보정 계수 ' + opt.factor +
        '를 곱한 추정값입니다. 실제 도로와 교통 상황은 반영되지 않으니 순서를 잡는 참고 자료로 쓰시고, 최종 판단은 운행 담당자가 해 주세요.' +
        (exact ? '' : ' 인원이 15명 이상이라 근사 계산을 했습니다. 최적에 가깝지만 완전한 최단 경로가 아닐 수 있습니다.') + '</p>';
 
   show(h);
+
   var pb = document.getElementById('printBtn');
   if(pb) pb.addEventListener('click', function(){ window.print(); });
 
+  var cb = document.getElementById('copyBtn');
+  if(cb) cb.addEventListener('click', function(){
+    var lines = [(center.name || '센터') + ' 송영 경로 · ' + people.length + '명 · ' + total.toFixed(1) + 'km'];
+    order.forEach(function(pi, k){ lines.push((k+1) + '. ' + people[pi-1].name + ' — ' + people[pi-1].addr); });
+    var text = lines.join('\n');
+    var done = function(){ cb.textContent = '복사했습니다'; setTimeout(function(){ cb.textContent = '순서 복사'; }, 1600); };
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done, function(){ cb.textContent = '복사하지 못했습니다'; });
+    } else {
+      cb.textContent = '복사하지 못했습니다';
+    }
+  });
+
   var dt = new Date();
-  document.getElementById('printTitle').textContent = (center.name || '센터') + ' 송영 경로';
-  document.getElementById('printDate').textContent =
+  document.getElementById('printhead').innerHTML =
+    '<h2>' + esc(center.name || '센터') + ' 송영 경로</h2><p>' +
     dt.getFullYear() + '년 ' + (dt.getMonth()+1) + '월 ' + dt.getDate() + '일 · ' +
-    people.length + '명 · ' + total.toFixed(1) + 'km';
+    people.length + '명 · ' + total.toFixed(1) + 'km</p>';
+
+  drawRoute(center.hit, people, order, total);
 }
 
+/* 목록의 한 줄을 누르면 지도가 그 지점으로 움직인다 */
+bodyEl.addEventListener('click', function(e){
+  var li = e.target.closest ? e.target.closest('.stop') : null;
+  if(!li || !mapObj) return;
+  var m = markers[+li.getAttribute('data-m')];
+  if(!m) return;
+  mapObj.setView(m.getLatLng(), Math.max(mapObj.getZoom(), 15), {animate:true});
+  m.openPopup();
+  Array.prototype.forEach.call(bodyEl.querySelectorAll('.stop'), function(x){ x.classList.remove('cur'); });
+  li.classList.add('cur');
+});
+
+/* ================= 계산 버튼 ================= */
 var calcBtn = document.getElementById('calc');
 var centerAddrI = document.getElementById('centerAddr');
 var centerPin = document.getElementById('centerPin');
@@ -670,6 +866,12 @@ attachAc(document.getElementById('centerAc'), centerAddrI, function(hit){
   centerHit = hit;
   if(hit){ setPin(centerPin, hit); bias = {lat:hit.lat, lng:hit.lng}; }
   else { centerPin.textContent = ''; centerPin.className = 'pin'; }
+  drawPreview();
+  queueSave();
+});
+document.getElementById('centerName').addEventListener('input', queueSave);
+['startTime','speed','stopMin','factor'].forEach(function(id){
+  document.getElementById(id).addEventListener('input', queueSave);
 });
 
 calcBtn.addEventListener('click', function(){
@@ -700,6 +902,7 @@ calcBtn.addEventListener('click', function(){
     start: parseTime(document.getElementById('startTime').value)
   };
 
+  saveState();
   calcBtn.disabled = true;
   var total = rows.length + 1, done = 0;
   statusEl.textContent = '주소 찾는 중 0/' + total;
@@ -755,13 +958,23 @@ calcBtn.addEventListener('click', function(){
   });
 });
 
+/* ================= 버튼들 ================= */
 document.getElementById('addRow').addEventListener('click', function(){
   addRow().querySelector('.f-name').focus();
 });
 document.getElementById('reset').addEventListener('click', function(){
+  // 센터는 매일 같으므로 그대로 두고 어르신 명단만 비운다
   peopleEl.innerHTML = '';
   addRow(); addRow(); addRow();
-  resultEl.classList.remove('on');
+  routeShown = false;
+  markers = [];
+  if(routeLayer) routeLayer.clearLayers();
+  drawPreview();
+  mapTop.className = 'maptop';
+  tabResult.disabled = true;
+  bodyEl.innerHTML = '<div class="empty">아래 <b>최적경로 계산</b>을 누르면<br>방문 순서가 여기에 나옵니다.</div>';
+  setTab('input');
+  queueSave();
 });
 document.getElementById('bulkGo').addEventListener('click', function(){
   var lines = document.getElementById('bulk').value.split(/\r?\n/).filter(function(l){ return l.trim(); });
@@ -772,6 +985,7 @@ document.getElementById('bulkGo').addEventListener('click', function(){
     addRow(p[0] || '', p.slice(1).join(' ').trim());
   });
   if(!peopleEl.children.length) addRow();
+  queueSave();
 });
 document.getElementById('sample').addEventListener('click', function(){
   document.getElementById('centerName').value = '햇살주야간보호센터';
@@ -784,6 +998,7 @@ document.getElementById('sample').addEventListener('click', function(){
   addRow('박철수', '전주시 덕진구 아중로 31');
   addRow('이순자', '전주시 덕진구 백제대로 700');
   addRow('최말순', '전주시 완산구 홍산로 90');
+  queueSave();
 });
 
 /* ----- 시작할 때 주소 검색 상태 확인 ----- */
@@ -801,9 +1016,24 @@ function checkProvider(){
     srcLine.textContent = '공개 지도 데이터로 주소를 찾습니다. 일부 주소는 정확도가 떨어질 수 있습니다.';
   });
 }
-checkProvider();
 
-addRow(); addRow(); addRow();
+ensureMap();
+if(!loadState()){ addRow(); addRow(); addRow(); }
+
+// 저장된 센터 주소가 있으면 시작하자마자 지도에 찍어 준다.
+// 다시 들어왔을 때 빈 지도가 아니라 우리 센터가 먼저 보이게 하려는 것이다.
+checkProvider().then(function(){
+  var ca = centerAddrI.value.trim();
+  if(!ca || centerHit) return;
+  return locate(ca).then(function(hit){
+    if(!hit) return;
+    centerHit = hit;
+    setPin(centerPin, hit);
+    bias = {lat:hit.lat, lng:hit.lng};
+    drawPreview();
+  });
+});
+window.addEventListener('resize', function(){ if(mapObj) mapObj.invalidateSize(); });
 })();
 </script>
 </body>
