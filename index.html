@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>송영 경로</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+:root{
+  --bg:#eef1ef;
+  --surface:#ffffff;
+  --ink:#0d1512;
+  --sub:#697a73;
+  --line:#e4eae7;
+  --accent:#07796a;
+  --accent-dark:#055c50;
+  --tint:#e3f2ee;
+  --warn:#b04a2c;
+  --warn-tint:#fbeee9;
+  --r-lg:20px;
+  --r-md:14px;
+  --r-sm:10px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'Pretendard Variable',Pretendard,'Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif;
+  font-size:15px;line-height:1.6;letter-spacing:-.01em;
+  -webkit-text-size-adjust:100%;
+  padding-bottom:120px;
+}
+.wrap{max-width:680px;margin:0 auto;padding:40px 18px 0;}
+
+h1{font-size:31px;font-weight:800;letter-spacing:-.035em;margin:0 0 8px;line-height:1.25;}
+.lede{margin:0 0 26px;color:var(--sub);font-size:15.5px;max-width:34ch;}
+
+.card{
+  background:var(--surface);border-radius:var(--r-lg);
+  padding:22px 20px;margin-bottom:14px;
+  box-shadow:0 1px 2px rgba(13,21,18,.04);
+}
+.card h2{font-size:17px;font-weight:700;margin:0 0 2px;letter-spacing:-.02em;}
+.card .sub{margin:0 0 16px;color:var(--sub);font-size:13.5px;}
+
+label{display:block;font-size:13px;font-weight:600;color:var(--sub);margin-bottom:6px;}
+input[type=text],input[type=number],textarea{
+  width:100%;padding:13px 14px;font:inherit;font-size:15px;
+  border:1.5px solid var(--line);border-radius:var(--r-md);
+  background:#fbfcfc;color:var(--ink);transition:border-color .15s,background .15s;
+}
+input::placeholder{color:#a9b5b0;}
+input:focus,textarea:focus{outline:none;border-color:var(--accent);background:#fff;}
+button:focus-visible,a:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px;}
+textarea{min-height:96px;resize:vertical;font-size:14px;line-height:1.55;}
+.field+.field{margin-top:12px;}
+
+.ac{position:relative;}
+.aclist{
+  position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:30;
+  background:#fff;border:1px solid var(--line);border-radius:var(--r-md);
+  box-shadow:0 12px 28px rgba(13,21,18,.13);
+  max-height:246px;overflow:auto;padding:5px;display:none;
+}
+.aclist.on{display:block;}
+.acitem{padding:10px 11px;border-radius:9px;cursor:pointer;font-size:14px;line-height:1.4;}
+.acitem:hover,.acitem.sel{background:var(--tint);}
+.acitem b{display:block;font-weight:600;}
+.acitem span{color:var(--sub);font-size:12.5px;}
+.acnote{padding:9px 11px;color:var(--sub);font-size:13px;}
+
+.people{display:flex;flex-direction:column;gap:10px;}
+.person{display:grid;grid-template-columns:104px minmax(0,1fr) 38px;gap:8px;align-items:start;}
+@media (max-width:520px){
+  .person{grid-template-columns:96px minmax(0,1fr) 34px;gap:6px;}
+  input[type=text]{padding:12px 11px;font-size:14.5px;}
+}
+.person .pin{font-size:12px;color:var(--sub);margin:6px 2px 0;line-height:1.45;grid-column:1 / -1;}
+.pin.ok{color:var(--accent);}
+.pin.bad{color:var(--warn);}
+
+.srcline{font-size:12.5px;color:var(--sub);margin:-18px 0 24px;}
+.srcline.ok{color:var(--accent);}
+.keyrow{display:flex;gap:8px;align-items:center;}
+.keyrow input{flex:1;min-width:0;}
+.badge{
+  display:inline-block;vertical-align:2px;margin-left:8px;
+  font-size:11.5px;font-weight:700;letter-spacing:0;
+  padding:3px 9px;border-radius:999px;background:#eef2f0;color:var(--sub);
+}
+.badge.on{background:var(--tint);color:var(--accent-dark);}
+.badge.off{background:var(--warn-tint);color:var(--warn);}
+.keyhelp{font-size:12.5px;color:var(--sub);line-height:1.55;margin:12px 0 0;}
+.keyhelp ol{margin:6px 0 0;padding-left:17px;}
+.keyhelp li{margin-bottom:3px;}
+.keyhelp a{color:var(--accent);}
+.iconbtn{
+  width:38px;height:46px;border:0;background:transparent;color:#b3beb9;
+  font-size:20px;border-radius:var(--r-sm);cursor:pointer;line-height:1;
+}
+.iconbtn:hover{background:var(--warn-tint);color:var(--warn);}
+
+.rowbtns{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+.chip{
+  border:1.5px solid var(--line);background:#fff;color:var(--ink);
+  border-radius:999px;padding:9px 15px;font:inherit;font-size:14px;font-weight:600;cursor:pointer;
+}
+.chip:hover{border-color:var(--accent);color:var(--accent);}
+.chip.quiet{border-color:transparent;color:var(--sub);}
+.chip.quiet:hover{background:#eef2f0;color:var(--ink);}
+
+details.more{margin-bottom:14px;}
+details.more>summary{
+  list-style:none;cursor:pointer;color:var(--sub);font-size:14px;font-weight:600;
+  padding:12px 18px;background:#fff;border-radius:var(--r-lg);
+}
+details.more>summary::-webkit-details-marker{display:none;}
+details.more>summary::after{content:'  ⌄';}
+details.more[open]>summary{border-radius:var(--r-lg) var(--r-lg) 0 0;padding-bottom:4px;}
+details.more .inner{background:#fff;border-radius:0 0 var(--r-lg) var(--r-lg);padding:8px 20px 22px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media (max-width:520px){.grid2{grid-template-columns:1fr;}}
+.tiny{font-size:12px;color:var(--sub);margin:5px 2px 0;line-height:1.45;}
+
+.bar{
+  position:fixed;left:0;right:0;bottom:0;z-index:40;
+  padding:14px 18px calc(14px + env(safe-area-inset-bottom));
+  background:rgba(238,241,239,.86);backdrop-filter:blur(12px);
+  border-top:1px solid rgba(13,21,18,.06);
+}
+.bar .inner{max-width:680px;margin:0 auto;display:flex;gap:12px;align-items:center;}
+.go{
+  flex:1;border:0;border-radius:var(--r-md);background:var(--accent);color:#fff;
+  font:inherit;font-size:16px;font-weight:700;padding:16px;cursor:pointer;letter-spacing:-.02em;
+}
+.go:hover{background:var(--accent-dark);}
+.go[disabled]{background:#9fb5af;cursor:progress;}
+.status{font-size:13px;color:var(--sub);min-width:0;}
+
+#result{display:none;}
+#result.on{display:block;}
+.summary{display:flex;gap:26px;flex-wrap:wrap;margin:2px 0 20px;}
+.summary div span{display:block;font-size:12.5px;color:var(--sub);margin-bottom:1px;}
+.summary div strong{font-size:26px;font-weight:800;letter-spacing:-.03em;font-variant-numeric:tabular-nums;}
+
+.route{list-style:none;margin:0;padding:0;}
+.stop{display:grid;grid-template-columns:30px minmax(0,1fr);gap:14px;}
+.mark{display:flex;justify-content:center;position:relative;}
+.bead{
+  width:28px;height:28px;border-radius:50%;flex:0 0 28px;
+  background:var(--tint);color:var(--accent-dark);
+  font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;
+  font-variant-numeric:tabular-nums;z-index:1;
+}
+.stop.end .bead{background:var(--accent);color:#fff;font-size:11px;}
+.mark .rail{position:absolute;top:0;bottom:0;width:2px;background:var(--line);}
+.stop .txt{padding-bottom:2px;min-width:0;}
+.stop .who{font-weight:700;font-size:16px;letter-spacing:-.02em;}
+.stop .who em{font-style:normal;font-weight:600;font-size:13px;color:var(--accent);margin-left:6px;}
+.stop .where{font-size:13.5px;color:var(--sub);word-break:keep-all;}
+.leg{display:grid;grid-template-columns:30px minmax(0,1fr);gap:14px;}
+.leg .txt{font-size:12.5px;color:var(--sub);padding:8px 0;font-variant-numeric:tabular-nums;}
+.reveal{opacity:0;transform:translateY(6px);animation:rise .38s ease forwards;}
+@keyframes rise{to{opacity:1;transform:none;}}
+@media (prefers-reduced-motion:reduce){.reveal{animation:none;opacity:1;transform:none;}}
+
+.note{font-size:12.5px;color:var(--sub);line-height:1.55;margin:20px 0 0;padding-top:14px;border-top:1px solid var(--line);}
+.alert{background:var(--warn-tint);border-radius:var(--r-md);padding:14px 16px;font-size:14px;color:#7c3520;}
+.alert b{display:block;margin-bottom:4px;}
+.alert ul{margin:6px 0 0;padding-left:18px;}
+
+@media print{
+  body{background:#fff;padding:0;}
+  .wrap{padding:0;max-width:none;}
+  h1,.lede,details.more,.bar,.noprint{display:none !important;}
+  .card{display:none;}
+  #result{display:block !important;box-shadow:none;padding:0;}
+  .printhead{display:block !important;margin-bottom:14px;}
+  .reveal{animation:none;opacity:1;transform:none;}
+}
+.printhead{display:none;}
+.printhead h2{font-size:21px;margin:0 0 2px;}
+.printhead p{margin:0;color:var(--sub);font-size:13px;}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <h1>송영 경로 만들기</h1>
+  <p class="lede">센터와 어르신 주소만 적으면 가장 짧은 방문 순서를 찾아 드립니다.</p>
+  <p class="srcline" id="srcline"></p>
+
+  <section class="card">
+    <h2>센터</h2>
+    <p class="sub">출발지이자 도착지입니다.</p>
+    <div class="field">
+      <input type="text" id="centerName" placeholder="센터 이름 (예: 햇살주야간보호센터)">
+    </div>
+    <div class="field ac" id="centerAc">
+      <input type="text" id="centerAddr" placeholder="센터 주소" autocomplete="off">
+      <div class="aclist"></div>
+    </div>
+    <div class="pin" id="centerPin"></div>
+  </section>
+
+  <section class="card">
+    <h2>어르신</h2>
+    <p class="sub">이름과 주소를 적어 주세요. 주소를 입력하면 후보가 뜹니다.</p>
+    <div class="people" id="people"></div>
+    <div class="rowbtns">
+      <button type="button" class="chip" id="addRow">어르신 추가</button>
+      <button type="button" class="chip quiet" id="sample">예시 채우기</button>
+      <button type="button" class="chip quiet" id="reset">비우기</button>
+    </div>
+  </section>
+
+  <details class="more">
+    <summary>명단 한 번에 붙여넣기</summary>
+    <div class="inner">
+      <p class="tiny" style="margin-bottom:8px">한 줄에 한 명씩 이름, 주소 순서로 붙여넣으세요. 엑셀에서 복사한 표도 됩니다.</p>
+      <textarea id="bulk" placeholder="홍길동, 전주시 완산구 서원로 10&#10;김영희, 전주시 완산구 백제대로 250"></textarea>
+      <div class="rowbtns"><button type="button" class="chip" id="bulkGo">명단 불러오기</button></div>
+    </div>
+  </details>
+
+  <details class="more">
+    <summary>세부 설정</summary>
+    <div class="inner">
+      <div class="grid2">
+        <div class="field">
+          <label for="startTime">출발 시각</label>
+          <input type="text" id="startTime" value="08:00">
+        </div>
+        <div class="field">
+          <label for="speed">평균 속도 (km/h)</label>
+          <input type="number" id="speed" value="25" min="5" max="80">
+        </div>
+        <div class="field">
+          <label for="stopMin">1인당 승하차 (분)</label>
+          <input type="number" id="stopMin" value="3" min="0" max="20">
+        </div>
+        <div class="field">
+          <label for="factor">도로 보정 계수</label>
+          <input type="number" id="factor" value="1.3" min="1" max="2" step="0.05">
+        </div>
+      </div>
+      <p class="tiny">보정 계수는 직선거리를 실제 도로 거리에 가깝게 맞추는 값입니다. 도심 1.3, 외곽 1.2 정도가 무난합니다.</p>
+    </div>
+  </details>
+
+  <section class="card" id="result">
+    <div class="printhead">
+      <h2 id="printTitle">송영 경로</h2>
+      <p id="printDate"></p>
+    </div>
+    <div id="resultBody"></div>
+  </section>
+</div>
+
+<div class="bar">
+  <div class="inner">
+    <button type="button" class="go" id="calc">최적경로 계산</button>
+    <div class="status" id="status"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+var cache = {};
+var bias = null;
+
+function timeout(ms){
+  var c = new AbortController();
+  setTimeout(function(){ c.abort(); }, ms);
+  return c.signal;
+}
+
+function photon(q, limit){
+  var url = 'https://photon.komoot.io/api/?limit=' + (limit||5) + '&q=' + encodeURIComponent(q);
+  if(bias) url += '&lat=' + bias.lat + '&lon=' + bias.lng;
+  return fetch(url, {signal:timeout(7000)}).then(function(r){
+    if(!r.ok) throw 0;
+    return r.json();
+  }).then(function(d){
+    return (d.features||[]).filter(function(f){
+      return !f.properties.countrycode || f.properties.countrycode === 'KR';
+    }).map(function(f){
+      var p = f.properties;
+      var main = p.name || [p.street, p.housenumber].filter(Boolean).join(' ') || p.city || '';
+      var rest = [p.state, p.city, p.district, p.street, p.housenumber]
+                 .filter(Boolean).filter(function(v){ return v !== main; }).join(' ');
+      return {lat:f.geometry.coordinates[1], lng:f.geometry.coordinates[0], title:main, detail:rest};
+    });
+  }).catch(function(){ return []; });
+}
+
+function nominatim(q, limit){
+  var url = 'https://nominatim.openstreetmap.org/search?format=jsonv2&countrycodes=kr'
+          + '&accept-language=ko&limit=' + (limit||5) + '&q=' + encodeURIComponent(q);
+  return fetch(url, {signal:timeout(9000)}).then(function(r){
+    if(!r.ok) throw 0;
+    return r.json();
+  }).then(function(d){
+    return (d||[]).map(function(o){
+      var parts = String(o.display_name||'').split(',').map(function(s){ return s.trim(); });
+      return {lat:parseFloat(o.lat), lng:parseFloat(o.lon),
+              title:o.name || parts[0], detail:parts.slice(1,4).reverse().join(' ')};
+    });
+  }).catch(function(){ return []; });
+}
+
+/* ----- 주소 검색 (같은 도메인의 /api/local 을 통해 카카오 로컬 API 호출) ----- */
+var kakaoOk = false;
+
+function kakaoGet(type, params){
+  var qs = 'type=' + type;
+  Object.keys(params).forEach(function(k){
+    qs += '&' + k + '=' + encodeURIComponent(params[k]);
+  });
+  return fetch('/api/local?' + qs, {signal:timeout(9000)}).then(function(r){
+    if(!r.ok) throw {code:'http', status:r.status};
+    return r.json();
+  });
+}
+
+function kakaoSearch(q, limit){
+  var size = limit || 5;
+  return kakaoGet('address', {query:q, size:size}).then(function(d){
+    var out = (d.documents||[]).map(function(o){
+      var road = o.road_address ? o.road_address.address_name : '';
+      var jibun = o.address ? o.address.address_name : '';
+      return {lat:+o.y, lng:+o.x, title:road || jibun || o.address_name,
+              detail:(road && jibun) ? jibun : ''};
+    });
+    if(out.length) return out;
+    var kp = {query:q, size:size};
+    if(bias){ kp.x = bias.lng; kp.y = bias.lat; }
+    return kakaoGet('keyword', kp).then(function(k){
+      return (k.documents||[]).map(function(o){
+        return {lat:+o.y, lng:+o.x, title:o.place_name,
+                detail:o.road_address_name || o.address_name || ''};
+      });
+    });
+  });
+}
+
+/* 검색 창구: 카카오가 살아 있으면 카카오, 아니면 공개 지도 데이터 */
+function suggest(q, limit){
+  if(kakaoOk) return kakaoSearch(q, limit).catch(function(){ return []; });
+  return photon(q, limit);
+}
+function findOne(q){
+  if(kakaoOk){
+    return kakaoSearch(q, 1).then(function(a){ return a[0] || null; })
+                            .catch(function(){ return null; });
+  }
+  return photon(q, 1).then(function(a){
+    if(a.length) return a[0];
+    return nominatim(q, 1).then(function(b){ return b.length ? b[0] : null; });
+  });
+}
+function ck(s){ return (kakaoOk ? 'k:' : 'o:') + String(s).trim(); }
+
+function variants(addr){
+  var s = String(addr).replace(/\s+/g,' ').trim();
+  var out = [s];
+  var trimmed = s.replace(/\([^)]*\)/g,' ')
+                 .replace(/\s*\d+\s*동\s*\d+\s*호.*$/,'')
+                 .replace(/\s*\d+\s*호\s*$/,'')
+                 .replace(/\s+/g,' ').trim();
+  if(trimmed && out.indexOf(trimmed) < 0) out.push(trimmed);
+  var tk = trimmed.split(' ');
+  if(tk.length > 2) out.push(tk.slice(0,-1).join(' '));
+  if(tk.length > 3) out.push(tk.slice(0,-2).join(' '));
+  return out;
+}
+
+function locate(addr){
+  var key = ck(addr);
+  if(cache[key]) return Promise.resolve(cache[key]);
+  var vs = variants(addr), i = 0;
+  function step(){
+    if(i >= vs.length){
+      if(!kakaoOk) return Promise.resolve(null);
+      return photon(vs[0], 1).then(function(a){
+        if(!a.length) return null;
+        var h = a[0];
+        h.approx = true;
+        h.used = vs[0];
+        cache[key] = h;
+        return h;
+      });
+    }
+    var q = vs[i], exact = (i === 0);
+    i++;
+    return findOne(q).then(function(hit){
+      if(!hit) return step();
+      hit.approx = !exact;
+      hit.used = q;
+      cache[key] = hit;
+      return hit;
+    });
+  }
+  return step();
+}
+
+function esc(s){
+  return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];
+  });
+}
+
+function attachAc(wrap, input, onPick){
+  var list = wrap.querySelector('.aclist');
+  var timer = null, items = [], sel = -1, lastQ = '';
+
+  function close(){ list.classList.remove('on'); list.innerHTML = ''; sel = -1; items = []; }
+  function draw(){
+    if(!items.length){ close(); return; }
+    list.innerHTML = items.map(function(it, i){
+      return '<div class="acitem' + (i === sel ? ' sel' : '') + '" data-i="' + i + '">'
+           + '<b>' + esc(it.title) + '</b>'
+           + (it.detail ? '<span>' + esc(it.detail) + '</span>' : '') + '</div>';
+    }).join('');
+    list.classList.add('on');
+  }
+  function pick(i){
+    var it = items[i];
+    if(!it) return;
+    input.value = it.title + (it.detail ? ' (' + it.detail + ')' : '');
+    cache[ck(input.value)] = {lat:it.lat, lng:it.lng, title:it.title, detail:it.detail, approx:false};
+    close();
+    onPick(it);
+  }
+
+  input.addEventListener('input', function(){
+    onPick(null);
+    var q = input.value.trim();
+    clearTimeout(timer);
+    if(q.length < 2){ close(); return; }
+    timer = setTimeout(function(){
+      if(q === lastQ) return;
+      lastQ = q;
+      suggest(q,5).then(function(a){
+        if(input.value.trim() !== q) return;
+        items = a; sel = -1;
+        if(!a.length){
+          list.innerHTML = '<div class="acnote">후보가 없습니다. 그대로 두고 계산하면 다시 찾아봅니다.</div>';
+          list.classList.add('on');
+        } else draw();
+      });
+    }, 350);
+  });
+
+  input.addEventListener('keydown', function(e){
+    if(!list.classList.contains('on') || !items.length) return;
+    if(e.key === 'ArrowDown'){ e.preventDefault(); sel = (sel + 1) % items.length; draw(); }
+    else if(e.key === 'ArrowUp'){ e.preventDefault(); sel = (sel - 1 + items.length) % items.length; draw(); }
+    else if(e.key === 'Enter' && sel >= 0){ e.preventDefault(); pick(sel); }
+    else if(e.key === 'Escape'){ close(); }
+  });
+
+  list.addEventListener('mousedown', function(e){
+    var el = e.target.closest ? e.target.closest('.acitem') : null;
+    if(el){ e.preventDefault(); pick(+el.getAttribute('data-i')); }
+  });
+  input.addEventListener('blur', function(){ setTimeout(close, 120); });
+}
+
+var peopleEl = document.getElementById('people');
+
+function setPin(pin, hit){
+  if(!hit){ pin.className = 'pin bad'; pin.textContent = '위치를 찾지 못했습니다'; return; }
+  pin.className = 'pin ok';
+  pin.textContent = (hit.approx ? '대략 위치 · ' : '위치 확인 · ') + (hit.title || '') +
+                    (hit.approx && hit.used ? ' (' + hit.used + ' 기준)' : '');
+}
+
+function addRow(name, addr){
+  var row = document.createElement('div');
+  row.className = 'person';
+  row.innerHTML =
+    '<input type="text" class="f-name" placeholder="이름">' +
+    '<div class="ac"><input type="text" class="f-addr" placeholder="주소" autocomplete="off"><div class="aclist"></div></div>' +
+    '<button type="button" class="iconbtn" title="삭제">&times;</button>' +
+    '<div class="pin"></div>';
+  peopleEl.appendChild(row);
+
+  var nameI = row.querySelector('.f-name');
+  var addrI = row.querySelector('.f-addr');
+  var pin = row.querySelector('.pin');
+
+  attachAc(row.querySelector('.ac'), addrI, function(hit){
+    if(hit){ setPin(pin, hit); row._hit = hit; }
+    else { pin.textContent = ''; pin.className = 'pin'; row._hit = null; }
+  });
+
+  row.querySelector('.iconbtn').addEventListener('click', function(){
+    row.remove();
+    if(!peopleEl.children.length) addRow();
+  });
+
+  if(name) nameI.value = name;
+  if(addr) addrI.value = addr;
+  return row;
+}
+
+function haversine(a,b){
+  var R = 6371, r = Math.PI/180;
+  var dLat = (b.lat-a.lat)*r, dLng = (b.lng-a.lng)*r;
+  var h = Math.sin(dLat/2)*Math.sin(dLat/2) +
+          Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dLng/2)*Math.sin(dLng/2);
+  return 2*R*Math.asin(Math.min(1, Math.sqrt(h)));
+}
+function matrix(pts, factor){
+  var n = pts.length, D = [];
+  for(var i=0;i<n;i++){
+    D.push(new Float64Array(n));
+    for(var j=0;j<n;j++) D[i][j] = i === j ? 0 : haversine(pts[i], pts[j]) * factor;
+  }
+  return D;
+}
+function heldKarp(D,N){
+  var full = 1 << N;
+  var dp = new Float64Array(full*N), par = new Int8Array(full*N);
+  dp.fill(Infinity); par.fill(-1);
+  for(var i=0;i<N;i++) dp[(1<<i)*N + i] = D[0][i+1];
+  for(var mask=1;mask<full;mask++){
+    for(var a=0;a<N;a++){
+      if(!(mask & (1<<a))) continue;
+      var cur = dp[mask*N + a];
+      if(!isFinite(cur)) continue;
+      for(var b=0;b<N;b++){
+        if(mask & (1<<b)) continue;
+        var nm = mask | (1<<b), nc = cur + D[a+1][b+1];
+        if(nc < dp[nm*N + b]){ dp[nm*N + b] = nc; par[nm*N + b] = a; }
+      }
+    }
+  }
+  var best = Infinity, last = -1;
+  for(var k=0;k<N;k++){
+    var c = dp[(full-1)*N + k] + D[k+1][0];
+    if(c < best){ best = c; last = k; }
+  }
+  var order = [], m = full-1, cur2 = last;
+  while(cur2 !== -1){ order.push(cur2 + 1); var p = par[m*N + cur2]; m ^= (1 << cur2); cur2 = p; }
+  order.reverse();
+  return {order:order, dist:best, exact:true};
+}
+function heuristic(D,N){
+  var left = [], i;
+  for(i=1;i<=N;i++) left.push(i);
+  var order = [], cur = 0;
+  while(left.length){
+    var bi = 0, bd = Infinity;
+    for(i=0;i<left.length;i++) if(D[cur][left[i]] < bd){ bd = D[cur][left[i]]; bi = i; }
+    cur = left[bi]; order.push(cur); left.splice(bi,1);
+  }
+  function len(o){
+    var s = D[0][o[0]];
+    for(var k=0;k<o.length-1;k++) s += D[o[k]][o[k+1]];
+    return s + D[o[o.length-1]][0];
+  }
+  var L = len(order), improved = true, guard = 0;
+  while(improved && guard++ < 300){
+    improved = false;
+    for(var a=0;a<order.length-1;a++){
+      for(var b=a+1;b<order.length;b++){
+        var cand = order.slice(0,a).concat(order.slice(a,b+1).reverse(), order.slice(b+1));
+        var nl = len(cand);
+        if(nl < L - 1e-9){ order = cand; L = nl; improved = true; }
+      }
+    }
+  }
+  return {order:order, dist:L, exact:false};
+}
+
+function parseTime(v){
+  var m = String(v||'').match(/(\d{1,2})\s*[:시]?\s*(\d{1,2})?/);
+  if(!m) return null;
+  var h = +m[1], mi = m[2] ? +m[2] : 0;
+  return (h > 23 || mi > 59) ? null : h*60 + mi;
+}
+function fmtTime(x){
+  x = Math.round(x) % 1440;
+  var h = Math.floor(x/60), m = x % 60;
+  return (h<10?'0':'') + h + ':' + (m<10?'0':'') + m;
+}
+function fmtDur(x){
+  x = Math.round(x);
+  var h = Math.floor(x/60), m = x % 60;
+  return h ? h + '시간 ' + m + '분' : m + '분';
+}
+
+var resultEl = document.getElementById('result');
+var bodyEl = document.getElementById('resultBody');
+var statusEl = document.getElementById('status');
+
+function show(html){
+  bodyEl.innerHTML = html;
+  resultEl.classList.add('on');
+  resultEl.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function render(center, people, order, total, exact, opt){
+  var driveMin = total / opt.speed * 60;
+  var totalMin = driveMin + opt.stopMin * people.length;
+
+  var seq = [{who:center.name || '센터', where:center.addr, end:true}];
+  order.forEach(function(i){ seq.push({who:people[i-1].name, where:people[i-1].addr, end:false}); });
+  seq.push({who:center.name || '센터', where:'복귀', end:true});
+
+  var pts = [center.hit].concat(order.map(function(i){ return people[i-1].hit; }));
+  pts.push(center.hit);
+
+  var clock = opt.start;
+  var h = '<div class="summary">' +
+          '<div><span>방문</span><strong>' + people.length + '명</strong></div>' +
+          '<div><span>이동거리</span><strong>' + total.toFixed(1) + 'km</strong></div>' +
+          '<div><span>예상 소요</span><strong>' + fmtDur(totalMin) + '</strong></div>' +
+          '</div><ul class="route">';
+
+  for(var i=0;i<seq.length;i++){
+    var s = seq[i];
+    var bead = s.end ? (i === 0 ? '출발' : '도착') : String(i);
+    var t = clock === null ? '' : '<em>' + fmtTime(clock) + '</em>';
+    var railStyle = (i === 0 ? 'top:50%;' : '') + (i === seq.length-1 ? 'bottom:50%;' : '');
+    h += '<li class="stop' + (s.end ? ' end' : '') + ' reveal" style="animation-delay:' + (i*45) + 'ms">' +
+         '<div class="mark"><div class="rail" style="' + railStyle + '"></div>' +
+         '<div class="bead">' + bead + '</div></div>' +
+         '<div class="txt"><div class="who">' + esc(s.who) + t + '</div>' +
+         (s.where ? '<div class="where">' + esc(s.where) + '</div>' : '') + '</div></li>';
+
+    if(i < seq.length - 1){
+      var d = haversine(pts[i], pts[i+1]) * opt.factor;
+      var legMin = d / opt.speed * 60;
+      if(clock !== null) clock += legMin + (i > 0 ? opt.stopMin : 0);
+      h += '<li class="leg reveal" style="animation-delay:' + (i*45 + 22) + 'ms">' +
+           '<div class="mark"><div class="rail"></div></div>' +
+           '<div class="txt">' + d.toFixed(1) + 'km · 약 ' + Math.round(legMin) + '분</div></li>';
+    }
+  }
+  h += '</ul>';
+  h += '<div class="rowbtns noprint"><button type="button" class="chip" id="printBtn">인쇄</button></div>';
+  h += '<p class="note">주소는 ' + (kakaoOk ? '카카오 지도' : '공개 지도 데이터') + '에서 찾았습니다. ' +
+       '거리는 두 지점의 직선거리에 보정 계수 ' + opt.factor +
+       '를 곱한 추정값입니다. 실제 도로와 교통 상황은 반영되지 않으니 순서를 잡는 참고 자료로 쓰시고, 최종 판단은 운행 담당자가 해 주세요.' +
+       (exact ? '' : ' 인원이 15명 이상이라 근사 계산을 했습니다. 최적에 가깝지만 완전한 최단 경로가 아닐 수 있습니다.') + '</p>';
+
+  show(h);
+  var pb = document.getElementById('printBtn');
+  if(pb) pb.addEventListener('click', function(){ window.print(); });
+
+  var dt = new Date();
+  document.getElementById('printTitle').textContent = (center.name || '센터') + ' 송영 경로';
+  document.getElementById('printDate').textContent =
+    dt.getFullYear() + '년 ' + (dt.getMonth()+1) + '월 ' + dt.getDate() + '일 · ' +
+    people.length + '명 · ' + total.toFixed(1) + 'km';
+}
+
+var calcBtn = document.getElementById('calc');
+var centerAddrI = document.getElementById('centerAddr');
+var centerPin = document.getElementById('centerPin');
+var centerHit = null;
+
+attachAc(document.getElementById('centerAc'), centerAddrI, function(hit){
+  centerHit = hit;
+  if(hit){ setPin(centerPin, hit); bias = {lat:hit.lat, lng:hit.lng}; }
+  else { centerPin.textContent = ''; centerPin.className = 'pin'; }
+});
+
+calcBtn.addEventListener('click', function(){
+  var centerName = document.getElementById('centerName').value.trim();
+  var centerAddr = centerAddrI.value.trim();
+
+  var rows = [];
+  Array.prototype.forEach.call(peopleEl.children, function(row){
+    var name = row.querySelector('.f-name').value.trim();
+    var addr = row.querySelector('.f-addr').value.trim();
+    if(!name && !addr) return;
+    rows.push({name:name || '(이름 없음)', addr:addr, row:row, hit:row._hit || null});
+  });
+
+  if(!centerAddr){
+    show('<div class="alert"><b>센터 주소가 비어 있습니다.</b>송영이 어디서 출발하는지 알아야 순서를 정할 수 있습니다.</div>');
+    return;
+  }
+  if(!rows.length){
+    show('<div class="alert"><b>어르신을 한 분 이상 입력해 주세요.</b>이름과 주소를 적으면 방문 순서를 찾아 드립니다.</div>');
+    return;
+  }
+
+  var opt = {
+    speed: parseFloat(document.getElementById('speed').value) || 25,
+    stopMin: parseFloat(document.getElementById('stopMin').value) || 0,
+    factor: parseFloat(document.getElementById('factor').value) || 1.3,
+    start: parseTime(document.getElementById('startTime').value)
+  };
+
+  calcBtn.disabled = true;
+  var total = rows.length + 1, done = 0;
+  statusEl.textContent = '주소 찾는 중 0/' + total;
+  function tick(){ done++; statusEl.textContent = '주소 찾는 중 ' + done + '/' + total; }
+
+  var job = (centerHit ? Promise.resolve(centerHit) : locate(centerAddr)).then(function(ch){
+    centerHit = ch;
+    tick();
+    if(ch){ setPin(centerPin, ch); bias = {lat:ch.lat, lng:ch.lng}; }
+    else setPin(centerPin, null);
+    var chain = Promise.resolve();
+    rows.forEach(function(p){
+      chain = chain.then(function(){
+        if(p.hit){ tick(); return; }
+        return locate(p.addr).then(function(hit){
+          p.hit = hit;
+          p.row._hit = hit;
+          setPin(p.row.querySelector('.pin'), hit);
+          tick();
+        });
+      });
+    });
+    return chain;
+  });
+
+  job.then(function(){
+    calcBtn.disabled = false;
+    statusEl.textContent = '';
+
+    var missing = [];
+    if(!centerHit) missing.push('센터 (' + centerAddr + ')');
+    rows.forEach(function(p){ if(!p.hit) missing.push(p.name + ' (' + p.addr + ')'); });
+
+    if(missing.length){
+      show('<div class="alert"><b>주소를 찾지 못한 곳이 있습니다.</b>' +
+           '건물명을 빼거나 읍·면·동까지만 남기고 다시 적어 보세요. 입력 칸 아래에 뜨는 후보를 눌러도 됩니다.' +
+           '<ul>' + missing.map(function(t){ return '<li>' + esc(t) + '</li>'; }).join('') + '</ul></div>');
+      return;
+    }
+
+    var pts = [centerHit].concat(rows.map(function(p){ return p.hit; }));
+    var D = matrix(pts, opt.factor);
+    var N = rows.length;
+    var res = N === 1 ? {order:[1], dist:D[0][1] + D[1][0], exact:true}
+            : N <= 14 ? heldKarp(D, N)
+            : heuristic(D, N);
+
+    render({name:centerName, addr:centerAddr, hit:centerHit}, rows, res.order, res.dist, res.exact, opt);
+  }).catch(function(){
+    calcBtn.disabled = false;
+    statusEl.textContent = '';
+    show('<div class="alert"><b>주소를 찾는 중 문제가 생겼습니다.</b>인터넷 연결을 확인하고 다시 눌러 주세요.</div>');
+  });
+});
+
+document.getElementById('addRow').addEventListener('click', function(){
+  addRow().querySelector('.f-name').focus();
+});
+document.getElementById('reset').addEventListener('click', function(){
+  peopleEl.innerHTML = '';
+  addRow(); addRow(); addRow();
+  resultEl.classList.remove('on');
+});
+document.getElementById('bulkGo').addEventListener('click', function(){
+  var lines = document.getElementById('bulk').value.split(/\r?\n/).filter(function(l){ return l.trim(); });
+  if(!lines.length) return;
+  peopleEl.innerHTML = '';
+  lines.forEach(function(l){
+    var p = l.split(/\t|,|\|/).map(function(s){ return s.trim(); });
+    addRow(p[0] || '', p.slice(1).join(' ').trim());
+  });
+  if(!peopleEl.children.length) addRow();
+});
+document.getElementById('sample').addEventListener('click', function(){
+  document.getElementById('centerName').value = '햇살주야간보호센터';
+  centerAddrI.value = '전주시 완산구 효자로 100';
+  centerHit = null;
+  centerPin.textContent = ''; centerPin.className = 'pin';
+  peopleEl.innerHTML = '';
+  addRow('홍길동', '전주시 완산구 서원로 10');
+  addRow('김영희', '전주시 완산구 백제대로 250');
+  addRow('박철수', '전주시 덕진구 아중로 31');
+  addRow('이순자', '전주시 덕진구 백제대로 700');
+  addRow('최말순', '전주시 완산구 홍산로 90');
+});
+
+/* ----- 시작할 때 주소 검색 상태 확인 ----- */
+var srcLine = document.getElementById('srcline');
+
+function checkProvider(){
+  return kakaoGet('address', {query:'서울특별시청', size:1}).then(function(){
+    kakaoOk = true;
+    cache = {};
+    srcLine.className = 'srcline ok';
+    srcLine.textContent = '카카오 주소 검색 사용 중';
+  }).catch(function(){
+    kakaoOk = false;
+    srcLine.className = 'srcline';
+    srcLine.textContent = '공개 지도 데이터로 주소를 찾습니다. 일부 주소는 정확도가 떨어질 수 있습니다.';
+  });
+}
+checkProvider();
+
+addRow(); addRow(); addRow();
+})();
+</script>
+</body>
+</html>
