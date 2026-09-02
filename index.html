@@ -480,6 +480,7 @@ var routeShown = false;
 var MV = (function(){
   var kind = null;      // 'kakao' | 'osm' | null
   var why = null;       // 카카오맵을 못 쓴 이유: 'nokey' | 'failed'
+  var used = null;      // 실제로 SDK 를 부를 때 쓴 키
   var map = null;
   var layer = null;     // OSM 전용 묶음
   var drawn = [];       // 카카오 전용: 지울 것들을 기억해 둔다
@@ -550,6 +551,7 @@ var MV = (function(){
   return {
     kind: function(){ return kind; },
     why: function(){ return why; },
+    usedKey: function(){ return used; },
 
     start: function(){
       return fetch('/api/mapkey', {signal:timeout(6000)}).then(function(r){
@@ -560,6 +562,7 @@ var MV = (function(){
         // 환경변수로 넣은 값이 있으면 그것을, 없으면 위에 적어 둔 기본 키를 쓴다
         var key = (d && d.key) || KAKAO_JS_KEY;
         if(!key){ why = 'nokey'; return null; }
+        used = key;
         return startKakao(key).catch(function(){ why = 'failed'; return null; });
       }).then(function(){
         if(kind) return kind;
@@ -1438,7 +1441,9 @@ MV.start().then(function(kind){
   mapLine.textContent =
       kind === 'kakao' ? '카카오맵 사용 중' :
       kind === 'osm'   ? ('OpenStreetMap 지도 사용 중 · ' + (MV.why() === 'failed'
-                            ? '카카오맵을 불러오지 못했습니다 (키와 도메인 등록을 확인해 주세요)'
+                            ? ('카카오맵을 불러오지 못했습니다 (지금 쓰는 키 ' +
+                               String(MV.usedKey() || '').slice(-6) +
+                               ' · 이 키가 살아 있는지, 도메인이 등록됐는지 확인해 주세요)')
                             : '카카오맵 키가 설정되지 않았습니다')) :
                          '지도를 표시하지 못했습니다';
   drawPreview();
