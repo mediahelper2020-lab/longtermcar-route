@@ -179,7 +179,17 @@ input:focus,textarea:focus{outline:none;border-color:var(--brand);
 .who em{font-style:normal;font-size:12.5px;font-weight:700;color:var(--brand);flex:none}
 .where{font-size:12px;color:var(--muted);word-break:keep-all}
 .leg{display:flex;gap:10px}
-.leg .txt{font-size:11.5px;color:var(--muted);padding:0 0 2px}
+.leg .txt{font-size:11.5px;color:var(--muted);padding:0 0 2px;
+  display:flex;align-items:center;gap:8px}
+.nav{margin-left:auto;flex:none;font-size:11px;font-weight:700;color:var(--brand);
+  text-decoration:none;border:1px solid var(--line-2);border-radius:7px;padding:2px 8px;
+  background:#fff;white-space:nowrap}
+.nav:hover{border-color:var(--brand);background:var(--brand-soft)}
+
+.madeby{margin-top:14px;padding:12px 4px 2px;display:flex;flex-wrap:wrap;gap:4px 10px;
+  align-items:center;border-top:1px solid var(--line);font-size:11px;color:var(--muted)}
+.madeby a{color:var(--muted);text-decoration:none}
+.madeby a:hover{color:var(--brand);text-decoration:underline}
 .note{font-size:11.5px;color:var(--muted);margin:14px 0 0;padding-top:12px;
   border-top:1px solid var(--line);word-break:keep-all}
 .alert{background:#fef3f2;border:1px solid #fecdca;border-radius:10px;padding:12px;font-size:13px;color:#912018}
@@ -365,6 +375,11 @@ input:focus,textarea:focus{outline:none;border-color:var(--brand);
           <div class="empty">아래 <b>최적경로 계산</b>을 누르면<br>방문 순서가 여기에 나옵니다.</div>
         </div>
       </div>
+
+      <footer class="madeby">
+        <span>송영MAP</span>
+        <a href="mailto:mediahelper2020@gmail.com">mediahelper2020@gmail.com</a>
+      </footer>
 
     </div>
 
@@ -1057,6 +1072,15 @@ function tourDist(D, order){
   return s + D[order[order.length-1]][0];
 }
 
+/* 카카오맵 길찾기 링크. 카카오맵은 한 번에 한 구간만 받으므로,
+   전체 코스를 한 번에 넘길 수는 없고 구간마다 안내를 연다.
+   이름에 쉼표가 들어가면 링크가 깨져서 미리 빼 둔다. */
+function naviUrl(a, b, an, bn){
+  function nm(s){ return encodeURIComponent(String(s || '').replace(/,/g, ' ').trim() || '지점'); }
+  return 'https://map.kakao.com/link/from/' + nm(an) + ',' + a.lat + ',' + a.lng +
+         '/to/' + nm(bn) + ',' + b.lat + ',' + b.lng;
+}
+
 /* 어르신별로 차에 앉아 계시는 시간(분). 태운 순서대로 돌려준다. */
 function rideMinutes(D, order, opt){
   var t = 0, arrive = [];
@@ -1452,7 +1476,10 @@ function showPlan(pick){
         var legMin = d / opt.speed * 60;
         if(clock !== null) clock += legMin + (i > 0 ? opt.stopMin : 0);
         h += '<li class="leg"><div class="mark"><div class="rail"></div></div>' +
-             '<div class="txt">' + d.toFixed(1) + 'km · 약 ' + Math.round(legMin) + '분</div></li>';
+             '<div class="txt"><span>' + d.toFixed(1) + 'km · 약 ' + Math.round(legMin) + '분</span>' +
+             '<a class="nav noprint" target="_blank" rel="noopener" href="' +
+               naviUrl(pts[i], pts[i+1], seq[i].who, seq[i+1].who) +
+             '">길안내</a></div></li>';
       }
     }
     h += '</ul>';
