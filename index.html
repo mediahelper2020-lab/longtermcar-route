@@ -48,10 +48,18 @@ body{margin:0;background:var(--bg);color:var(--ink);
 .srcline.ok{color:var(--ink-2)}
 .srcline.ok::before{background:var(--ok);box-shadow:0 0 0 3px rgba(18,128,92,.15)}
 
+/* ----- 등원/하원 ----- */
+.modebar{display:flex;gap:3px;margin:11px 16px 0;padding:3px;
+  background:var(--panel-2);border:1px solid var(--line);border-radius:11px}
+.modebtn{flex:1;border:0;background:none;padding:9px 0;font:inherit;font-size:13px;font-weight:800;
+  color:var(--muted);cursor:pointer;border-radius:8px;letter-spacing:-.01em}
+.modebtn.on{background:var(--brand);color:#fff}
+.modebtn:not(.on):hover{color:var(--ink-2)}
+
 /* ----- 탭 ----- */
-.tabs{display:flex;gap:3px;margin:12px 16px 0;padding:4px;
+.tabs{display:flex;gap:2px;margin:8px 16px 0;padding:4px;
   background:var(--panel-2);border:1px solid var(--line);border-radius:12px}
-.tab{flex:1;border:0;background:none;padding:8px 0;font:inherit;font-size:13px;font-weight:700;
+.tab{flex:1;border:0;background:none;padding:8px 0;font:inherit;font-size:12px;font-weight:700;
   color:var(--muted);cursor:pointer;border-radius:9px;letter-spacing:-.01em}
 .tab.on{background:#fff;color:var(--brand);box-shadow:0 1px 2px rgba(16,24,40,.10)}
 .tab:not(.on):not(:disabled):hover{color:var(--ink-2)}
@@ -90,15 +98,6 @@ input:focus,textarea:focus{outline:none;border-color:var(--brand);
 .acitem.sel,.acitem:hover{background:#f0f6ff}
 .acnote{padding:9px 11px;font-size:12px;color:var(--muted)}
 
-/* 번호는 CSS 로 매긴다. 줄을 지우거나 더해도 알아서 다시 매겨진다. */
-.people{counter-reset:pnum}
-.person{display:grid;grid-template-columns:23px 84px 1fr 30px;gap:6px;align-items:center;
-  margin-bottom:7px}
-.person::before{counter-increment:pnum;content:counter(pnum);
-  width:23px;height:23px;border-radius:7px;background:var(--panel-2);color:var(--muted);
-  font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;
-  display:flex;align-items:center;justify-content:center}
-.person .pin{grid-column:2/-1;align-self:start}
 .pin{font-size:11.5px;color:var(--muted);line-height:1.4}
 .pin.ok{color:var(--ok)}
 .pin.bad{color:var(--bad)}
@@ -131,6 +130,34 @@ input:focus,textarea:focus{outline:none;border-color:var(--brand);
   font-size:13px;font-weight:600;color:var(--ink-2)}
 .chk input{width:16px;height:16px;margin:0;accent-color:var(--brand);cursor:pointer}
 .chk:hover{border-color:var(--brand)}
+
+select{font:inherit;padding:9px 10px;border:1px solid var(--line-2);border-radius:9px;
+  background:#fff;color:var(--ink);width:100%}
+
+/* ----- 어르신 관리 ----- */
+.rrow{display:flex;align-items:center;gap:8px;padding:9px 10px;border:1px solid var(--line);
+  border-radius:10px;margin-bottom:6px;background:#fff}
+.rrow .rmain{flex:1;min-width:0}
+.rrow .rname{font-size:13.5px;font-weight:700}
+.rrow .raddr{display:block;font-size:11.5px;color:var(--muted);white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.rrow .rnote{display:block;font-size:11px;color:var(--muted);margin-top:1px}
+.rcarbadge{flex:none;font-size:10.5px;font-weight:700;color:var(--brand);background:var(--brand-soft);
+  border-radius:20px;padding:3px 9px;white-space:nowrap}
+.rwarn{display:inline-block;font-size:10.5px;font-weight:700;color:var(--bad);background:#fef2f2;
+  border-radius:20px;padding:1px 7px;margin-left:6px;white-space:nowrap}
+.rrow .iconbtn{height:30px;width:30px;padding:0;font-size:14px;flex:none}
+.rbulkstat{font-size:11.5px;color:var(--muted);align-self:center}
+
+/* ----- 오늘 송영 ----- */
+.trow{display:flex;align-items:center;gap:9px;padding:8px 6px;border-radius:9px;cursor:pointer}
+.trow:hover{background:#fff}
+.trow input[type=checkbox]{width:17px;height:17px;accent-color:var(--brand);cursor:pointer;flex:none}
+.trow .tmain{flex:1;min-width:0}
+.trow .tname{font-size:13.5px;font-weight:700}
+.trow .taddr{display:block;font-size:11px;color:var(--muted);white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.tcar{flex:none;width:auto;font-size:11px;padding:4px 6px;border-radius:7px}
 
 /* ----- 아래 고정 버튼 ----- */
 .pfoot{border-top:1px solid var(--line);padding:12px 16px;background:#fff;
@@ -203,6 +230,12 @@ input:focus,textarea:focus{outline:none;border-color:var(--brand);
 .alert{background:#fef3f2;border:1px solid #fecdca;border-radius:10px;padding:12px;font-size:13px;color:#912018}
 .alert b{display:block;margin-bottom:4px}
 .alert ul{margin:7px 0 0;padding-left:17px}
+/* 계산 전 검증 오류는 어느 탭에 있든 눈에 띄도록 버튼 위 고정 자리에 띄운다.
+   결과 화면(show())은 탭을 결과로 넘겨 버려서, 방금 고치라고 안내한 탭이
+   곧바로 가려지는 문제가 있었다. */
+.valertwrap{padding:0 16px}
+.valertwrap:empty{display:none}
+.valertwrap .alert{margin-top:10px}
 .empty{text-align:center;color:var(--muted);font-size:13px;padding:44px 10px;word-break:keep-all}
 .printhead{display:none}
 
@@ -241,7 +274,7 @@ input:focus,textarea:focus{outline:none;border-color:var(--brand);
 
 /* ----- 인쇄 ----- */
 @media print{
-  .mapwrap,.tabs,.pfoot,.srcline,.noprint,.more,.rowbtns,.brand{display:none!important}
+  .mapwrap,.tabs,.pfoot,.srcline,.noprint,.more,.rowbtns,.brand,.modebar,.plans{display:none!important}
   .app{display:block;height:auto}
   .panel{width:auto;flex:none;box-shadow:none}
   .pbody{overflow:visible;padding:0;background:none}
@@ -293,18 +326,25 @@ input:focus,textarea:focus{outline:none;border-color:var(--brand);
       <p class="srcline" id="mapline">지도 준비 중</p>
     </div>
 
+    <div class="modebar">
+      <button type="button" class="modebtn on" id="modeArrival">등원 송영</button>
+      <button type="button" class="modebtn" id="modeDeparture">하원 송영</button>
+    </div>
+
     <div class="tabs">
-      <button type="button" class="tab on" id="tabInput">입력</button>
+      <button type="button" class="tab on" id="tabCenter">센터</button>
+      <button type="button" class="tab" id="tabRoster">어르신</button>
+      <button type="button" class="tab" id="tabToday">오늘 송영</button>
       <button type="button" class="tab" id="tabResult" disabled>결과</button>
     </div>
 
     <div class="pbody">
 
-      <!-- ===== 입력 ===== -->
-      <div class="pane on" id="paneInput">
+      <!-- ===== 센터 ===== -->
+      <div class="pane on" id="paneCenter">
         <div class="blk">
           <h2>센터</h2>
-          <p class="sub">출발지이자 도착지입니다.</p>
+          <p class="sub">출발지이자 도착지입니다. 등원·하원 모두 같은 센터를 씁니다.</p>
           <div class="field">
             <input type="text" id="centerName" placeholder="센터 이름 (예: 햇살주야간보호센터)">
           </div>
@@ -314,16 +354,68 @@ input:focus,textarea:focus{outline:none;border-color:var(--brand);
           </div>
           <div class="pin" id="centerPin"></div>
         </div>
+      </div>
+
+      <!-- ===== 어르신 관리 ===== -->
+      <div class="pane" id="paneRoster">
+        <div class="blk">
+          <h2 id="rHeading">어르신 등록</h2>
+          <p class="sub">한 번만 등록해 두면 다음부터는 오늘 송영 탭에서 체크만 하면 됩니다.
+            송영에 필요한 최소 정보만 저장합니다. 생년월일·장기요양등급·연락처는 받지 않고,
+            이 브라우저에만 저장되어 서버로 전송되지 않습니다.</p>
+          <div class="field">
+            <input type="text" id="rName" placeholder="이름">
+          </div>
+          <div class="field ac" id="rAddrAc">
+            <input type="text" id="rAddr" placeholder="주소" autocomplete="off">
+            <div class="aclist"></div>
+          </div>
+          <div class="pin" id="rPin"></div>
+          <div class="field">
+            <label for="rCar">기본 차량</label>
+            <select id="rCar"><option value="0">자동배정</option></select>
+          </div>
+          <div class="field">
+            <textarea id="rNote" placeholder="메모 (선택)" style="min-height:56px"></textarea>
+          </div>
+          <div class="rowbtns">
+            <button type="button" class="chip" id="rSave">등록</button>
+            <button type="button" class="chip quiet" id="rCancel" hidden>취소</button>
+          </div>
+        </div>
 
         <div class="blk">
-          <h2>어르신 <span class="cnt" id="peopleCount"></span></h2>
-          <p class="sub">주소를 입력하면 후보가 뜹니다. 후보를 누르면 지도에 바로 찍힙니다.</p>
-          <div class="people" id="people"></div>
+          <h2>등록된 어르신 <span class="cnt" id="rosterCount"></span></h2>
+          <div id="rosterList"></div>
           <div class="rowbtns">
-            <button type="button" class="chip" id="addRow">어르신 추가</button>
-            <button type="button" class="chip quiet" id="sample">예시 채우기</button>
-            <button type="button" class="chip quiet" id="reset">비우기</button>
+            <button type="button" class="chip quiet" id="rSample">예시 채우기</button>
+            <button type="button" class="chip quiet" id="rClearAll">전체 삭제</button>
           </div>
+        </div>
+
+        <details class="more">
+          <summary>명단 한 번에 등록</summary>
+          <div class="inner">
+            <p class="tiny" style="margin:0 0 8px">한 줄에 한 명씩 이름, 주소 순서로 붙여넣으세요. 엑셀에서 복사한 표도 됩니다.</p>
+            <textarea id="rBulk" placeholder="홍길동, 전주시 완산구 서원로 10&#10;김영희, 전주시 완산구 백제대로 250"></textarea>
+            <div class="rowbtns">
+              <button type="button" class="chip" id="rBulkGo">명단 등록</button>
+              <span class="rbulkstat" id="rBulkStatus"></span>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <!-- ===== 오늘 송영 ===== -->
+      <div class="pane" id="paneToday">
+        <div class="blk">
+          <h2>오늘 송영 대상 <span class="cnt" id="todayCount"></span></h2>
+          <p class="sub">체크한 어르신만 계산에 들어갑니다.</p>
+          <div class="rowbtns" style="margin-top:0;margin-bottom:9px">
+            <button type="button" class="chip quiet" id="selAll">전체 선택</button>
+            <button type="button" class="chip quiet" id="selNone">전체 해제</button>
+          </div>
+          <div id="todayList"></div>
         </div>
 
         <div class="blk">
@@ -342,16 +434,7 @@ input:focus,textarea:focus{outline:none;border-color:var(--brand);
         </div>
 
         <details class="more">
-          <summary>명단 한 번에 붙여넣기</summary>
-          <div class="inner">
-            <p class="tiny" style="margin:0 0 8px">한 줄에 한 명씩 이름, 주소 순서로 붙여넣으세요. 엑셀에서 복사한 표도 됩니다.</p>
-            <textarea id="bulk" placeholder="홍길동, 전주시 완산구 서원로 10&#10;김영희, 전주시 완산구 백제대로 250"></textarea>
-            <div class="rowbtns"><button type="button" class="chip" id="bulkGo">명단 불러오기</button></div>
-          </div>
-        </details>
-
-        <details class="more">
-          <summary>세부 설정</summary>
+          <summary>고급 설정</summary>
           <div class="inner">
             <div class="grid2">
               <div class="field">
@@ -384,7 +467,7 @@ input:focus,textarea:focus{outline:none;border-color:var(--brand);
       <div class="pane" id="paneResult">
         <div class="printhead" id="printhead"></div>
         <div id="resultBody">
-          <div class="empty">아래 <b>최적경로 계산</b>을 누르면<br>방문 순서가 여기에 나옵니다.</div>
+          <div class="empty">어르신을 등록하고 오늘 송영 탭에서 체크한 뒤<br>아래 <b>최적경로 계산</b>을 누르면 결과가 여기에 나옵니다.</div>
         </div>
       </div>
 
@@ -397,6 +480,7 @@ input:focus,textarea:focus{outline:none;border-color:var(--brand);
 
     </div>
 
+    <div class="valertwrap" id="valertwrap"></div>
     <div class="pfoot">
       <button type="button" class="go" id="calc">최적경로 계산</button>
       <div class="status" id="status"></div>
@@ -754,7 +838,7 @@ var MV = (function(){
   };
 })();
 
-/* 계산 전: 찍힌 위치만 회색 점으로 미리 보여 준다 */
+/* 계산 전: 센터와 오늘 체크된 어르신을 회색 점으로 미리 보여 준다 */
 function drawPreview(){
   if(routeShown) return;
   MV.clear();
@@ -764,11 +848,11 @@ function drawPreview(){
               document.getElementById('centerName').value.trim() || '센터');
     pts.push([centerHit.lat, centerHit.lng]);
   }
-  Array.prototype.forEach.call(peopleEl.children, function(row){
-    var h = row._hit;
-    if(!h) return;
-    MV.marker(h.lat, h.lng, '', 'dot', row.querySelector('.f-name').value.trim() || '어르신');
-    pts.push([h.lat, h.lng]);
+  todaySel[mode].forEach(function(id){
+    var e = rosterById(id);
+    if(!e || e.lat == null) return;
+    MV.marker(e.lat, e.lng, '', 'dot', e.name);
+    pts.push([e.lat, e.lng]);
   });
   MV.fit(pts);
 }
@@ -829,26 +913,104 @@ function drawRoute(ch, rows, cars, total){
   }
 }
 
+/* ================= 어르신 주소록 (IndexedDB) ================= */
+/* 이름·주소·좌표·기본차량·메모만 저장한다. 생년월일, 장기요양등급,
+   연락처처럼 송영에 필요 없는 개인정보는 받지 않는다. */
+var IDB_NAME = 'songyeongmap', IDB_VER = 1, IDB_STORE = 'elders';
+
+function idbOpen(){
+  return new Promise(function(res, rej){
+    if(!window.indexedDB){ rej(new Error('no-idb')); return; }
+    var req = indexedDB.open(IDB_NAME, IDB_VER);
+    req.onupgradeneeded = function(e){
+      var db = e.target.result;
+      if(!db.objectStoreNames.contains(IDB_STORE)) db.createObjectStore(IDB_STORE, {keyPath:'id'});
+    };
+    req.onsuccess = function(e){ res(e.target.result); };
+    req.onerror = function(){ rej(req.error); };
+  });
+}
+// IndexedDB 를 못 쓰는 브라우저에서도 앱은 이번 방문 동안은 동작해야 하니,
+// 열기에 실패하면 null 로 넘겨 저장만 조용히 건너뛴다.
+var idbReady = idbOpen().catch(function(){ return null; });
+
+function idbAll(){
+  return idbReady.then(function(db){
+    if(!db) return [];
+    return new Promise(function(res){
+      var req = db.transaction(IDB_STORE, 'readonly').objectStore(IDB_STORE).getAll();
+      req.onsuccess = function(){ res(req.result || []); };
+      req.onerror = function(){ res([]); };
+    });
+  });
+}
+function idbPut(elder){
+  return idbReady.then(function(db){
+    if(!db) return elder;
+    return new Promise(function(res){
+      var tx = db.transaction(IDB_STORE, 'readwrite');
+      tx.objectStore(IDB_STORE).put(elder);
+      tx.oncomplete = function(){ res(elder); };
+      tx.onerror = function(){ res(elder); };
+    });
+  });
+}
+function idbDelete(id){
+  return idbReady.then(function(db){
+    if(!db) return;
+    return new Promise(function(res){
+      var tx = db.transaction(IDB_STORE, 'readwrite');
+      tx.objectStore(IDB_STORE)['delete'](id);
+      tx.oncomplete = function(){ res(); };
+      tx.onerror = function(){ res(); };
+    });
+  });
+}
+function idbClear(){
+  return idbReady.then(function(db){
+    if(!db) return;
+    return new Promise(function(res){
+      var tx = db.transaction(IDB_STORE, 'readwrite');
+      tx.objectStore(IDB_STORE).clear();
+      tx.oncomplete = function(){ res(); };
+      tx.onerror = function(){ res(); };
+    });
+  });
+}
+function newId(){ return 'e' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+
+var roster = [];
+function rosterById(id){
+  for(var i=0;i<roster.length;i++) if(roster[i].id === id) return roster[i];
+  return null;
+}
+
+/* ================= 등원 / 하원, 오늘 선택 ================= */
+var mode = 'arrival'; // 'arrival'(등원) | 'departure'(하원)
+var todaySel = {arrival:new Set(), departure:new Set()};
+var todayMeta = {arrival:{start:'08:00'}, departure:{start:'16:00'}};
+
 /* ================= 자동 이어쓰기 ================= */
-var LS = 'songyeong.v1';
+var LS_V1 = 'songyeong.v1';
+var LS = 'songyeong.v2';
 
 function saveState(){
   try{
-    var rows = [];
-    Array.prototype.forEach.call(peopleEl.children, function(row){
-      rows.push({n:row.querySelector('.f-name').value, a:row.querySelector('.f-addr').value});
-    });
+    todayMeta[mode].start = document.getElementById('startTime').value;
     localStorage.setItem(LS, JSON.stringify({
       cn:document.getElementById('centerName').value,
       ca:document.getElementById('centerAddr').value,
-      rows:rows,
-      st:document.getElementById('startTime').value,
       sp:document.getElementById('speed').value,
       sm:document.getElementById('stopMin').value,
       fc:document.getElementById('factor').value,
       cr:document.getElementById('cars').value,
       se:document.getElementById('seats').value,
-      tf:document.getElementById('traffic').checked ? 1 : 0
+      tf:document.getElementById('traffic').checked ? 1 : 0,
+      mode:mode,
+      today:{
+        arrival:{start:todayMeta.arrival.start, ids:Array.from(todaySel.arrival)},
+        departure:{start:todayMeta.departure.start, ids:Array.from(todaySel.departure)}
+      }
     }));
   }catch(e){ /* 저장이 막힌 브라우저에서도 앱은 그대로 동작한다 */ }
 }
@@ -856,42 +1018,62 @@ function saveState(){
 function loadState(){
   var s = null;
   try{ s = JSON.parse(localStorage.getItem(LS) || 'null'); }catch(e){ return false; }
-  if(!s || !s.rows || !s.rows.length) return false;
+  if(!s) return false;
   document.getElementById('centerName').value = s.cn || '';
   document.getElementById('centerAddr').value = s.ca || '';
-  if(s.st) document.getElementById('startTime').value = s.st;
   if(s.sp) document.getElementById('speed').value = s.sp;
   if(s.sm) document.getElementById('stopMin').value = s.sm;
   if(s.fc) document.getElementById('factor').value = s.fc;
   if(s.cr) document.getElementById('cars').value = s.cr;
   if(s.se) document.getElementById('seats').value = s.se;
   if(s.tf !== undefined) document.getElementById('traffic').checked = !!s.tf;
-  peopleEl.innerHTML = '';
-  s.rows.forEach(function(r){ addRow(r.n || '', r.a || ''); });
+  if(s.mode) mode = s.mode;
+  if(s.today){
+    ['arrival','departure'].forEach(function(m){
+      if(!s.today[m]) return;
+      if(s.today[m].start) todayMeta[m].start = s.today[m].start;
+      (s.today[m].ids || []).forEach(function(id){ todaySel[m].add(id); });
+    });
+  }
+  document.getElementById('startTime').value = todayMeta[mode].start;
   return true;
 }
 
-/* 이름이나 주소가 하나라도 적힌 줄만 센다. 빈 줄은 아직 안 채운 칸이다. */
-function filledRows(){
-  var n = 0;
-  Array.prototype.forEach.call(peopleEl.children, function(row){
-    var nm = row.querySelector('.f-name'), ad = row.querySelector('.f-addr');
-    if((nm && nm.value.trim()) || (ad && ad.value.trim())) n++;
-  });
-  return n;
+/* 예전 버전(주소를 매일 새로 입력하던 방식)에서 쓰던 데이터가 있으면
+   센터와 세부 설정만 옮겨 온다. 그때는 좌표를 저장하지 않았으므로
+   명단은 옮기지 못한다 — 새로 등록해야 한다. 한 번 옮기고 나면 지운다. */
+function migrateV1(){
+  var raw = null;
+  try{ raw = localStorage.getItem(LS_V1); }catch(e){ return; }
+  if(!raw) return;
+  try{
+    var v1 = JSON.parse(raw);
+    if(v1.cn) document.getElementById('centerName').value = v1.cn;
+    if(v1.ca) document.getElementById('centerAddr').value = v1.ca;
+    if(v1.sp) document.getElementById('speed').value = v1.sp;
+    if(v1.sm) document.getElementById('stopMin').value = v1.sm;
+    if(v1.fc) document.getElementById('factor').value = v1.fc;
+    if(v1.cr) document.getElementById('cars').value = v1.cr;
+    if(v1.se) document.getElementById('seats').value = v1.se;
+    if(v1.tf !== undefined) document.getElementById('traffic').checked = !!v1.tf;
+    if(v1.st) todayMeta.arrival.start = v1.st;
+  }catch(e){ /* 손상된 옛 데이터는 그냥 건너뛴다 */ }
+  try{ localStorage.removeItem(LS_V1); }catch(e){}
 }
 
-function syncCount(){
-  var n = filledRows();
-  var badge = document.getElementById('peopleCount');
-  if(badge) badge.textContent = n ? n + '명' : '';
+function syncCounts(){
+  var rc = document.getElementById('rosterCount');
+  if(rc) rc.textContent = roster.length ? roster.length + '명' : '';
+  var tc = document.getElementById('todayCount');
+  var n = todaySel[mode].size;
+  if(tc) tc.textContent = n ? n + '명' : '';
   var btn = document.getElementById('calc');
   if(btn && !btn.disabled) btn.textContent = n ? ('어르신 ' + n + '명 경로 계산') : '최적경로 계산';
 }
 
 var saveTimer = null;
 function queueSave(){
-  syncCount();
+  syncCounts();
   clearTimeout(saveTimer);
   saveTimer = setTimeout(saveState, 400);
 }
@@ -954,49 +1136,11 @@ function attachAc(wrap, input, onPick){
   input.addEventListener('blur', function(){ setTimeout(close, 120); });
 }
 
-var peopleEl = document.getElementById('people');
-peopleEl.addEventListener('input', syncCount);
-
 function setPin(pin, hit){
   if(!hit){ pin.className = 'pin bad'; pin.textContent = '위치를 찾지 못했습니다'; return; }
   pin.className = 'pin ok';
   pin.textContent = (hit.approx ? '대략 위치 · ' : '위치 확인 · ') + (hit.title || '') +
                     (hit.approx && hit.used ? ' (' + hit.used + ' 기준)' : '');
-}
-
-function addRow(name, addr){
-  var row = document.createElement('div');
-  row.className = 'person';
-  row.innerHTML =
-    '<input type="text" class="f-name" placeholder="이름">' +
-    '<div class="ac"><input type="text" class="f-addr" placeholder="주소" autocomplete="off"><div class="aclist"></div></div>' +
-    '<button type="button" class="iconbtn" title="삭제">&times;</button>' +
-    '<div class="pin"></div>';
-  peopleEl.appendChild(row);
-
-  var nameI = row.querySelector('.f-name');
-  var addrI = row.querySelector('.f-addr');
-  var pin = row.querySelector('.pin');
-
-  attachAc(row.querySelector('.ac'), addrI, function(hit){
-    if(hit){ setPin(pin, hit); row._hit = hit; }
-    else { pin.textContent = ''; pin.className = 'pin'; row._hit = null; }
-    drawPreview();
-    queueSave();
-  });
-
-  row.querySelector('.iconbtn').addEventListener('click', function(){
-    row.remove();
-    if(!peopleEl.children.length) addRow();
-    drawPreview();
-    queueSave();
-  });
-
-  nameI.addEventListener('input', queueSave);
-
-  if(name) nameI.value = name;
-  if(addr) addrI.value = addr;
-  return row;
 }
 
 /* ================= 계산 ================= */
@@ -1043,35 +1187,38 @@ function heldKarp(D,N){
   return {order:order, dist:best, exact:true};
 }
 /* 어르신이 차에 앉아 계시는 시간의 합을 가장 짧게 만드는 순서.
-   한 구간을 달릴 때 이미 타신 분들이 모두 그 시간을 함께 보내므로,
-   구간 거리에 그때까지 태운 인원수를 곱해 더하면 그 합이 된다.
-   센터에서 첫 집까지는 빈 차라 0 이고, 마지막 구간은 전원이 타고 있다.
-   그래서 최단거리 경로와 다른 순서가 나올 수 있다. */
-function heldKarpRide(D,N){
+   등원(픽업)은 한 구간을 달릴 때 '이미 태운' 인원수를 그 구간 거리에
+   곱해 더한다 — 센터에서 첫 집까지는 빈 차라 0, 마지막 구간은
+   전원이 타고 있다. 하원(배웅)은 그 반대다 — 다들 센터에서 한꺼번에
+   타므로, 아직 '못 내린' 인원수를 곱한다. 첫 구간이 전원, 마지막
+   구간은 마지막 한 분만 남는다. dropoff 플래그로 이 둘을 뒤집는다. */
+function heldKarpRide(D,N,dropoff){
   var full = 1 << N;
   var dp = new Float64Array(full*N), par = new Int8Array(full*N);
   dp.fill(Infinity); par.fill(-1);
-  for(var i=0;i<N;i++) dp[(1<<i)*N + i] = 0;
 
   var bits = new Int8Array(full);
   for(var m=1;m<full;m++) bits[m] = bits[m >> 1] + (m & 1);
 
+  function weight(visited){ return dropoff ? (N - visited) : visited; }
+
+  for(var i=0;i<N;i++) dp[(1<<i)*N + i] = weight(0) * D[0][i+1];
   for(var mask=1;mask<full;mask++){
-    var onboard = bits[mask];
+    var w = weight(bits[mask]);
     for(var a=0;a<N;a++){
       if(!(mask & (1<<a))) continue;
       var cur = dp[mask*N + a];
       if(!isFinite(cur)) continue;
       for(var b=0;b<N;b++){
         if(mask & (1<<b)) continue;
-        var nm = mask | (1<<b), nc = cur + onboard * D[a+1][b+1];
+        var nm = mask | (1<<b), nc = cur + w * D[a+1][b+1];
         if(nc < dp[nm*N + b]){ dp[nm*N + b] = nc; par[nm*N + b] = a; }
       }
     }
   }
   var best = Infinity, last = -1;
   for(var k=0;k<N;k++){
-    var c = dp[(full-1)*N + k] + N * D[k+1][0];
+    var c = dp[(full-1)*N + k] + weight(N) * D[k+1][0];
     if(c < best){ best = c; last = k; }
   }
   var order = [], mm = full-1, cur2 = last;
@@ -1097,7 +1244,9 @@ function naviUrl(a, b, an, bn){
          '/to/' + nm(bn) + ',' + b.lat + ',' + b.lng;
 }
 
-/* 어르신별로 차에 앉아 계시는 시간(분). 태운 순서대로 돌려준다. */
+/* 어르신별로 차에 앉아 계시는 시간(분). 방문 순서대로 돌려준다.
+   등원은 태운 시각부터 센터 도착까지, 하원은 센터 출발(전원 동시 탑승)
+   부터 그 어르신 댁 도착까지를 잰다. */
 function rideMinutes(D, order, opt){
   if(!order.length) return [];
   var clock = opt.start, t = 0, arrive = [];
@@ -1108,6 +1257,7 @@ function rideMinutes(D, order, opt){
     clock = tick(clock, opt.stopMin);
     t += opt.stopMin;
   }
+  if(opt.mode === 'departure') return arrive.slice();
   var atCenter = t - opt.stopMin + D[order[order.length-1]][0] / speedAt(clock, opt) * 60;
   return arrive.map(function(a){ return atCenter - a; });
 }
@@ -1220,12 +1370,14 @@ function routeFor(D, idx, exactOk){
   };
 }
 
-/* 탑승 시간을 기준으로 푼 순서 */
-function rideFor(D, idx){
+/* 탑승 시간을 기준으로 푼 순서. dropoff 가 참이면 하원(모두 센터에서
+   함께 타고 한 분씩 내리는) 기준으로, 아니면 등원(한 분씩 태워 센터로
+   모으는) 기준으로 푼다. */
+function rideFor(D, idx, dropoff){
   var n = idx.length;
   if(n <= 1) return {order:idx.slice(), exact:true};
   var sub = subMatrix(D, idx);
-  var r = n <= 14 ? heldKarpRide(sub, n) : heuristic(sub, n);
+  var r = n <= 14 ? heldKarpRide(sub, n, dropoff) : heuristic(sub, n);
   return {order: r.order.map(function(k){ return idx[k-1]; }), exact:n <= 14};
 }
 
@@ -1272,8 +1424,9 @@ function buildPlans(D, groups, rows, opt){
             stats:planStats(D, cars, rows, opt)};
   }
 
+  var dropoff = opt.mode === 'departure';
   var shortO = groups.map(function(g){ return routeFor(D, g, true).order; });
-  var rideO  = groups.map(function(g){ return rideFor(D, g).order; });
+  var rideO  = groups.map(function(g){ return rideFor(D, g, dropoff).order; });
   var revO   = shortO.map(function(o){ return o.slice().reverse(); });
 
   var plans = [pack('short', '최단 거리', shortO)];
@@ -1302,11 +1455,14 @@ function planWhy(plan, base, opt){
            '거동이 불편하시거나 멀미가 있는 분이 계실 때 좋습니다.';
   }
 
-  return '1번과 똑같은 길을 반대 방향으로 돕니다. 그래서 주행거리와 총 소요 시간이 완전히 같습니다. ' +
-         '바뀌는 것은 태우는 순서뿐입니다. 가장 오래 타시는 분이 ' +
+  var isBack = opt.mode === 'departure';
+  return (isBack
+      ? '1번과 똑같은 길을 반대 순서로 내려 드립니다. 그래서 주행거리와 총 소요 시간이 완전히 같습니다. 바뀌는 것은 내리는 순서뿐입니다. '
+      : '1번과 똑같은 길을 반대 방향으로 돕니다. 그래서 주행거리와 총 소요 시간이 완전히 같습니다. 바뀌는 것은 태우는 순서뿐입니다. ') +
+         '가장 오래 타시는 분이 ' +
          esc(b.rideMaxWho) + '(' + Math.round(b.rideMax) + '분)에서 ' +
          esc(s.rideMaxWho) + '(' + Math.round(s.rideMax) + '분)으로 바뀝니다. ' +
-         '특정 어르신을 일찍 모셔야 하거나, 반대로 오래 태우지 않아야 할 때 쓰세요.';
+         '특정 어르신을 일찍 ' + (isBack ? '내려 드려야' : '모셔야') + ' 하거나, 반대로 오래 태우지 않아야 할 때 쓰세요.';
 }
 
 /* 배정이 얼마나 좋은지 재는 값. 가장 늦게 끝나는 차가 먼저고, 그다음이 총합. */
@@ -1327,16 +1483,40 @@ function betterScore(a, b){
   return a.sum < b.sum - 1e-9;
 }
 
-function splitCars(D, N, K, cap, pts, opt){
+/* pins[idx-1] 는 그 사람의 고정 차량(1부터) 이거나, 고정이 없으면 0.
+   차량 범위를 벗어난 값(대수를 줄인 뒤 남은 옛 값 등)은 고정 없음으로 본다.
+   고정된 인원이 그 차 정원을 넘으면 계산 대신 {error:'pinover', ...} 를 돌려준다. */
+function splitCars(D, N, K, cap, pts, opt, pins){
   var i, all = [];
   for(i=1;i<=N;i++) all.push(i);
 
   if(K <= 1) return [all];
 
+  pins = pins || [];
+  var groups = [], pinnedCount = [], pinnedSet = {};
+  for(i=0;i<K;i++){ groups.push([]); pinnedCount.push(0); }
+  var unpinned = [];
+  all.forEach(function(idx){
+    var p = pins[idx-1] || 0;
+    if(p >= 1 && p <= K){
+      groups[p-1].push(idx);
+      pinnedCount[p-1]++;
+      pinnedSet[idx] = true;
+    } else {
+      unpinned.push(idx);
+    }
+  });
+  for(i=0;i<K;i++){
+    if(pinnedCount[i] > cap) return {error:'pinover', car:i+1, count:pinnedCount[i], cap:cap};
+  }
+
+  if(!unpinned.length) return groups;
+
   // 센터를 중심으로 방위각 순서로 세운 뒤, 이어지는 덩어리로 자른다.
   // 같은 방향에 사는 분들이 한 차에 묶이도록 하는 것이 출발점이다.
+  // 고정된 인원은 이미 자리를 차지하고 있으니, 남은 자리에만 채운다.
   var c = pts[0];
-  var byAngle = all.slice().sort(function(a, b){
+  var byAngle = unpinned.slice().sort(function(a, b){
     return Math.atan2(pts[a].lat - c.lat, pts[a].lng - c.lng) -
            Math.atan2(pts[b].lat - c.lat, pts[b].lng - c.lng);
   });
@@ -1345,28 +1525,38 @@ function splitCars(D, N, K, cap, pts, opt){
   var best = null, bestScore = null;
   for(var r=0;r<byAngle.length;r++){
     var rot = byAngle.slice(r).concat(byAngle.slice(0, r));
-    var g = [], per = Math.ceil(N / K);
-    for(i=0;i<K;i++) g.push(rot.slice(i*per, (i+1)*per).filter(Boolean));
-    if(g.some(function(x){ return x.length > cap; })) continue;
+    var g = groups.map(function(gr){ return gr.slice(); });
+    var remain = g.map(function(gr){ return cap - gr.length; });
+    var pos = 0;
+    for(var ci=0; ci<K; ci++){
+      var take = Math.max(0, Math.min(remain[ci], rot.length - pos));
+      if(take){ g[ci] = g[ci].concat(rot.slice(pos, pos + take)); pos += take; }
+    }
+    if(pos < rot.length) continue; // 이 시작점으로는 다 못 태운다
     var sc = scoreGroups(D, g, opt);
     if(!bestScore || betterScore(sc, bestScore)){ bestScore = sc; best = g; }
   }
 
-  // 정원 때문에 어느 자리에서도 나눌 수 없으면 순서대로라도 채운다
+  // 정원 때문에 어느 시작점에서도 다 못 태우면(극단적인 편중) 빈자리부터 채운다
   if(!best){
-    best = [];
-    for(i=0;i<K;i++) best.push([]);
-    byAngle.forEach(function(p, k){ best[k % K].push(p); });
+    best = groups.map(function(gr){ return gr.slice(); });
+    var remain2 = best.map(function(gr){ return cap - gr.length; });
+    var pi = 0;
+    byAngle.forEach(function(p){
+      while(pi < K && remain2[pi] <= 0) pi++;
+      if(pi < K){ best[pi].push(p); remain2[pi]--; }
+    });
     bestScore = scoreGroups(D, best, opt);
   }
 
-  // 한 명씩 옮기거나 두 명을 맞바꿔 보면서 더 나아지면 받아들인다
+  // 고정되지 않은 사람만 한 명씩 옮기거나 두 명을 맞바꿔 보면서 더 나아지면 받아들인다
   var improved = true, guard = 0;
   while(improved && guard++ < 60){
     improved = false;
 
     for(var a=0;a<K && !improved;a++){
       for(var ai=0;ai<best[a].length && !improved;ai++){
+        if(pinnedSet[best[a][ai]]) continue;
         for(var b=0;b<K && !improved;b++){
           if(a === b || best[b].length >= cap) continue;
           var moved = best.map(function(g, gi){
@@ -1374,7 +1564,6 @@ function splitCars(D, N, K, cap, pts, opt){
             if(gi === b) return g.concat([best[a][ai]]);
             return g;
           });
-          if(moved[a].length === 0) continue;
           var ms = scoreGroups(D, moved, opt);
           if(betterScore(ms, bestScore)){ best = moved; bestScore = ms; improved = true; }
         }
@@ -1383,8 +1572,10 @@ function splitCars(D, N, K, cap, pts, opt){
 
     for(var x=0;x<K && !improved;x++){
       for(var xi=0;xi<best[x].length && !improved;xi++){
+        if(pinnedSet[best[x][xi]]) continue;
         for(var y=x+1;y<K && !improved;y++){
           for(var yi=0;yi<best[y].length && !improved;yi++){
+            if(pinnedSet[best[y][yi]]) continue;
             var sw = best.map(function(g){ return g.slice(); });
             var t = sw[x][xi]; sw[x][xi] = sw[y][yi]; sw[y][yi] = t;
             var ss = scoreGroups(D, sw, opt);
@@ -1395,7 +1586,9 @@ function splitCars(D, N, K, cap, pts, opt){
     }
   }
 
-  return best.filter(function(g){ return g.length; });
+  // 빈 차라도 인덱스를 그대로 둔다 — 안 그러면 "2호차 고정"이 결과에서
+  // 자리가 밀려 다른 번호로 보일 수 있다.
+  return best;
 }
 
 function parseTime(v){
@@ -1418,29 +1611,48 @@ function fmtDur(x){
 /* ================= 화면 ================= */
 var bodyEl = document.getElementById('resultBody');
 var statusEl = document.getElementById('status');
-var tabInput = document.getElementById('tabInput');
-var tabResult = document.getElementById('tabResult');
-var paneInput = document.getElementById('paneInput');
-var paneResult = document.getElementById('paneResult');
 var pbody = document.querySelector('.pbody');
 
+var TAB_NAMES = ['center','roster','today','result'];
+var TAB_IDS = {center:'Center', roster:'Roster', today:'Today', result:'Result'};
+var tabEl = {}, paneEl = {};
+TAB_NAMES.forEach(function(t){
+  tabEl[t] = document.getElementById('tab' + TAB_IDS[t]);
+  paneEl[t] = document.getElementById('pane' + TAB_IDS[t]);
+});
+var tabResult = tabEl.result;
+
 function setTab(which){
-  var isIn = which === 'input';
-  tabInput.classList.toggle('on', isIn);
-  tabResult.classList.toggle('on', !isIn);
-  paneInput.classList.toggle('on', isIn);
-  paneResult.classList.toggle('on', !isIn);
+  TAB_NAMES.forEach(function(t){
+    tabEl[t].classList.toggle('on', t === which);
+    paneEl[t].classList.toggle('on', t === which);
+  });
   pbody.scrollTop = 0;
   setTimeout(function(){ MV.refresh(); }, 60);
 }
-tabInput.addEventListener('click', function(){ setTab('input'); });
-tabResult.addEventListener('click', function(){ setTab('result'); });
+TAB_NAMES.forEach(function(t){
+  tabEl[t].addEventListener('click', function(){
+    if(tabEl[t].disabled) return;
+    setTab(t);
+  });
+});
+
+function emptyResultHtml(){
+  return '<div class="empty">어르신을 등록하고 오늘 송영 탭에서 체크한 뒤<br>아래 <b>최적경로 계산</b>을 누르면 결과가 여기에 나옵니다.</div>';
+}
 
 function show(html){
   bodyEl.innerHTML = html;
   tabResult.disabled = false;
   setTab('result');
 }
+
+/* 계산을 누르기 전 단계에서 걸리는 오류(주소 없음, 정원 초과 등)는
+   결과 탭으로 넘기지 않고, 문제를 고칠 수 있는 탭에 그대로 둔 채
+   버튼 위에 띄운다. */
+var valertEl = document.getElementById('valertwrap');
+function showValidation(html){ valertEl.innerHTML = html; }
+function clearValidation(){ valertEl.innerHTML = ''; }
 
 var curPlans = null, curCtx = null, curPick = 0;
 
@@ -1499,6 +1711,8 @@ function showPlan(pick){
   var markBase = 1;
 
   cars.forEach(function(car, ci){
+    if(!car.order.length) return; // 대수만 늘려 두고 아무도 안 탄 차는 카드에 안 보여준다
+
     var color = CAR_COLORS[ci % CAR_COLORS.length];
     var carDist = car.dist;
     var carMin = car.order.length ? carTime(curCtx.D, car.order, opt) : 0;
@@ -1579,7 +1793,7 @@ function showPlan(pick){
 
   var cb = document.getElementById('copyBtn');
   if(cb) cb.addEventListener('click', function(){
-    var lines = [(center.name || '센터') + ' 송영 경로 · ' +
+    var lines = [(center.name || '센터') + (opt.mode === 'departure' ? ' 하원' : ' 등원') + ' 송영 경로 · ' +
                  (multi ? cars.length + '대 · ' : '') + visited + '명 · ' + total.toFixed(1) + 'km'];
     cars.forEach(function(car, ci){
       if(multi){
@@ -1601,7 +1815,7 @@ function showPlan(pick){
 
   var dt = new Date();
   document.getElementById('printhead').innerHTML =
-    '<h2>' + esc(center.name || '센터') + ' 송영 경로</h2><p>' +
+    '<h2>' + esc(center.name || '센터') + (opt.mode === 'departure' ? ' 하원' : ' 등원') + ' 송영 경로</h2><p>' +
     dt.getFullYear() + '년 ' + (dt.getMonth()+1) + '월 ' + dt.getDate() + '일 · ' +
     (multi ? cars.length + '대 · ' : '') + visited + '명 · ' + total.toFixed(1) + 'km</p>';
 
@@ -1623,7 +1837,7 @@ bodyEl.addEventListener('click', function(e){
   li.classList.add('cur');
 });
 
-/* ================= 계산 버튼 ================= */
+/* ================= 센터 ================= */
 var calcBtn = document.getElementById('calc');
 var centerAddrI = document.getElementById('centerAddr');
 var centerPin = document.getElementById('centerPin');
@@ -1637,29 +1851,358 @@ attachAc(document.getElementById('centerAc'), centerAddrI, function(hit){
   queueSave();
 });
 document.getElementById('centerName').addEventListener('input', queueSave);
-['startTime','speed','stopMin','factor','cars','seats'].forEach(function(id){
+['startTime','speed','stopMin','factor','seats'].forEach(function(id){
   document.getElementById(id).addEventListener('input', queueSave);
 });
 document.getElementById('traffic').addEventListener('change', queueSave);
 
+/* ================= 차량 대수 → 차량 고정 옵션 ================= */
+function carCountNow(){
+  return Math.min(Math.max(parseInt(document.getElementById('cars').value, 10) || 1, 1), 4);
+}
+function fillCarOptions(sel){
+  var K = carCountNow(), prev = sel.value, html = '<option value="0">자동배정</option>';
+  for(var i=1;i<=K;i++) html += '<option value="' + i + '">' + i + '호차 고정</option>';
+  sel.innerHTML = html;
+  if(+prev <= K) sel.value = prev;
+}
+var rCarSel = document.getElementById('rCar');
+document.getElementById('cars').addEventListener('input', function(){
+  fillCarOptions(rCarSel);
+  renderTodayList();
+  renderRosterList();
+  queueSave();
+});
+
+/* ================= 어르신 관리 ================= */
+var rNameI = document.getElementById('rName');
+var rAddrI = document.getElementById('rAddr');
+var rNoteI = document.getElementById('rNote');
+var rPinEl = document.getElementById('rPin');
+var rSaveBtn = document.getElementById('rSave');
+var rCancelBtn = document.getElementById('rCancel');
+var rHeading = document.getElementById('rHeading');
+var editingId = null;
+var rHit = null;
+
+attachAc(document.getElementById('rAddrAc'), rAddrI, function(hit){
+  rHit = hit;
+  if(hit) setPin(rPinEl, hit);
+  else { rPinEl.textContent = ''; rPinEl.className = 'pin'; }
+});
+
+function resetRosterForm(){
+  editingId = null;
+  rNameI.value = ''; rAddrI.value = ''; rNoteI.value = ''; rCarSel.value = '0';
+  rHit = null; rPinEl.textContent = ''; rPinEl.className = 'pin';
+  rSaveBtn.textContent = '등록';
+  rHeading.textContent = '어르신 등록';
+  rCancelBtn.hidden = true;
+}
+
+rSaveBtn.addEventListener('click', function(){
+  var name = rNameI.value.trim();
+  var addr = rAddrI.value.trim();
+  if(!name || !addr){ alert('이름과 주소를 모두 입력해 주세요.'); return; }
+
+  function proceed(hit){
+    var e = editingId ? rosterById(editingId) : {id:newId()};
+    e.name = name; e.addr = addr; e.note = rNoteI.value.trim();
+    e.carPin = (+rCarSel.value) || 0;
+    if(hit){ e.lat = hit.lat; e.lng = hit.lng; }
+    idbPut(e).then(function(){
+      if(!editingId) roster.push(e);
+      resetRosterForm();
+      renderRosterList();
+      renderTodayList();
+      syncCounts();
+    });
+  }
+
+  var existing = editingId ? rosterById(editingId) : null;
+  if(rHit){
+    proceed(rHit);
+  } else if(existing && existing.lat != null && existing.addr === addr){
+    proceed(null); // 주소를 안 바꿨으면 기존 좌표를 그대로 쓴다
+  } else {
+    rSaveBtn.disabled = true;
+    locate(addr).then(function(hit){
+      rSaveBtn.disabled = false;
+      if(!hit){ alert('주소를 찾지 못했습니다. 주소 아래 뜨는 후보를 선택해 주세요.'); return; }
+      proceed(hit);
+    });
+  }
+});
+
+rCancelBtn.addEventListener('click', resetRosterForm);
+
+function editRoster(id){
+  var e = rosterById(id);
+  if(!e) return;
+  editingId = id;
+  rNameI.value = e.name; rAddrI.value = e.addr; rNoteI.value = e.note || '';
+  rCarSel.value = String(e.carPin || 0);
+  if(e.lat != null){
+    rHit = {lat:e.lat, lng:e.lng};
+    setPin(rPinEl, {lat:e.lat, lng:e.lng, title:e.addr, approx:false});
+  } else {
+    rHit = null;
+    rPinEl.textContent = '위치 확인 필요 · 주소를 다시 입력해 후보를 선택해 주세요';
+    rPinEl.className = 'pin bad';
+  }
+  rSaveBtn.textContent = '수정 저장';
+  rHeading.textContent = '어르신 수정';
+  rCancelBtn.hidden = false;
+  setTab('roster');
+  rNameI.focus();
+}
+
+function deleteRoster(id){
+  var e = rosterById(id);
+  if(!e) return;
+  if(!confirm(e.name + ' 님을 주소록에서 삭제할까요?')) return;
+  idbDelete(id).then(function(){
+    roster = roster.filter(function(x){ return x.id !== id; });
+    todaySel.arrival['delete'](id);
+    todaySel.departure['delete'](id);
+    if(editingId === id) resetRosterForm();
+    renderRosterList();
+    renderTodayList();
+    syncCounts();
+    queueSave();
+  });
+}
+
+document.getElementById('rClearAll').addEventListener('click', function(){
+  if(!roster.length) return;
+  if(!confirm('등록된 어르신 ' + roster.length + '명을 모두 삭제할까요? 되돌릴 수 없습니다.')) return;
+  idbClear().then(function(){
+    roster = [];
+    todaySel.arrival.clear();
+    todaySel.departure.clear();
+    resetRosterForm();
+    renderRosterList();
+    renderTodayList();
+    syncCounts();
+    queueSave();
+  });
+});
+
+function renderRosterList(){
+  var listEl = document.getElementById('rosterList');
+  document.getElementById('rosterCount').textContent = roster.length ? roster.length + '명' : '';
+  if(!roster.length){
+    listEl.innerHTML = '<p class="tiny" style="margin:0">아직 등록된 어르신이 없습니다. 위 양식으로 한 분씩 등록하거나, 아래 명단 한 번에 등록으로 여러 명을 한 번에 등록하세요.</p>';
+    return;
+  }
+  listEl.innerHTML = roster.map(function(e){
+    var badge = e.carPin ? (e.carPin + '호차') : '자동';
+    var warn = e.lat == null ? '<span class="rwarn">위치 확인 필요</span>' : '';
+    return '<div class="rrow" data-id="' + e.id + '">' +
+      '<div class="rmain"><span class="rname">' + esc(e.name) + warn + '</span>' +
+      '<span class="raddr">' + esc(e.addr) + '</span>' +
+      (e.note ? '<span class="rnote">' + esc(e.note) + '</span>' : '') + '</div>' +
+      '<span class="rcarbadge">' + badge + '</span>' +
+      '<button type="button" class="iconbtn" data-act="edit" title="수정">&#9998;</button>' +
+      '<button type="button" class="iconbtn" data-act="del" title="삭제">&times;</button>' +
+    '</div>';
+  }).join('');
+}
+document.getElementById('rosterList').addEventListener('click', function(e){
+  var act = e.target.closest ? e.target.closest('[data-act]') : null;
+  if(!act) return;
+  var row = act.closest('.rrow');
+  if(!row) return;
+  var id = row.getAttribute('data-id');
+  if(act.getAttribute('data-act') === 'edit') editRoster(id);
+  else deleteRoster(id);
+});
+
+document.getElementById('rBulkGo').addEventListener('click', function(){
+  var lines = document.getElementById('rBulk').value.split(/\r?\n/).map(function(l){ return l.trim(); }).filter(Boolean);
+  if(!lines.length) return;
+  var items = lines.map(function(l){
+    var p = l.split(/\t|,|\|/).map(function(s){ return s.trim(); });
+    return {name:p[0] || '(이름 없음)', addr:p.slice(1).join(' ').trim()};
+  }).filter(function(it){ return it.addr; });
+  if(!items.length) return;
+
+  var btn = document.getElementById('rBulkGo');
+  var statusEl2 = document.getElementById('rBulkStatus');
+  btn.disabled = true;
+  var doneN = 0;
+  statusEl2.textContent = '등록 중 0/' + items.length;
+  var added = [];
+  var chain = Promise.resolve();
+  items.forEach(function(it){
+    chain = chain.then(function(){
+      return locate(it.addr).then(function(hit){
+        doneN++;
+        statusEl2.textContent = '등록 중 ' + doneN + '/' + items.length;
+        var e = {id:newId(), name:it.name, addr:it.addr, note:'', carPin:0,
+                 lat: hit ? hit.lat : null, lng: hit ? hit.lng : null};
+        roster.push(e);
+        added.push(e);
+        return idbPut(e);
+      });
+    });
+  });
+  chain.then(function(){
+    btn.disabled = false;
+    statusEl2.textContent = '';
+    document.getElementById('rBulk').value = '';
+    renderRosterList();
+    renderTodayList();
+    syncCounts();
+    var missing = added.filter(function(e){ return e.lat == null; });
+    if(missing.length){
+      alert(missing.length + '명은 주소를 찾지 못했습니다. 목록에서 수정을 눌러 다시 확인해 주세요:\n' +
+            missing.map(function(e){ return '- ' + e.name + ' (' + e.addr + ')'; }).join('\n'));
+    }
+  });
+});
+
+document.getElementById('rSample').addEventListener('click', function(){
+  if(roster.length && !confirm('예시 5명을 추가로 등록할까요? 기존 등록 인원은 그대로 둡니다.')) return;
+  if(!document.getElementById('centerAddr').value.trim()){
+    document.getElementById('centerName').value = '햇살주야간보호센터';
+    centerAddrI.value = '전주시 완산구 효자로 100';
+    locate(centerAddrI.value).then(function(hit){
+      centerHit = hit;
+      if(hit){ setPin(centerPin, hit); bias = {lat:hit.lat, lng:hit.lng}; }
+      drawPreview();
+      queueSave();
+    });
+  }
+  var samples = [
+    ['홍길동', '전주시 완산구 서원로 10', 35.804, 127.121],
+    ['김영희', '전주시 완산구 백제대로 250', 35.821, 127.134],
+    ['박철수', '전주시 덕진구 아중로 31', 35.839, 127.160],
+    ['이순자', '전주시 덕진구 백제대로 700', 35.848, 127.128],
+    ['최말순', '전주시 완산구 홍산로 90', 35.796, 127.095]
+  ];
+  var chain = Promise.resolve();
+  samples.forEach(function(s){
+    chain = chain.then(function(){
+      var e = {id:newId(), name:s[0], addr:s[1], lat:s[2], lng:s[3], note:'', carPin:0};
+      roster.push(e);
+      todaySel[mode].add(e.id);
+      return idbPut(e);
+    });
+  });
+  chain.then(function(){
+    renderRosterList();
+    renderTodayList();
+    syncCounts();
+    drawPreview();
+    queueSave();
+  });
+});
+
+/* ================= 오늘 송영 ================= */
+function renderTodayList(){
+  var listEl = document.getElementById('todayList');
+  var sel = todaySel[mode];
+  if(!roster.length){
+    listEl.innerHTML = '<p class="tiny" style="margin:0">등록된 어르신이 없습니다. <b>어르신</b> 탭에서 먼저 등록해 주세요.</p>';
+    return;
+  }
+  var K = carCountNow();
+  listEl.innerHTML = roster.map(function(e){
+    var checked = sel.has(e.id);
+    var warn = e.lat == null ? ' <span class="rwarn">위치 확인 필요</span>' : '';
+    var opts = '<option value="0"' + (!e.carPin ? ' selected' : '') + '>자동</option>';
+    for(var i=1;i<=K;i++) opts += '<option value="' + i + '"' + (e.carPin === i ? ' selected' : '') + '>' + i + '호차</option>';
+    return '<label class="trow"><input type="checkbox" data-id="' + e.id + '"' + (checked ? ' checked' : '') + '>' +
+      '<span class="tmain"><span class="tname">' + esc(e.name) + '</span>' +
+      '<span class="taddr">' + esc(e.addr) + warn + '</span></span>' +
+      '<select class="tcar" data-id="' + e.id + '">' + opts + '</select></label>';
+  }).join('');
+}
+
+document.getElementById('todayList').addEventListener('change', function(e){
+  var t = e.target;
+  var id = t.getAttribute('data-id');
+  if(!id) return;
+  if(t.type === 'checkbox'){
+    if(t.checked) todaySel[mode].add(id); else todaySel[mode]['delete'](id);
+    syncCounts();
+    queueSave();
+    drawPreview();
+  } else if(t.classList.contains('tcar')){
+    var el = rosterById(id);
+    if(el){ el.carPin = (+t.value) || 0; idbPut(el); renderRosterList(); }
+  }
+});
+
+document.getElementById('selAll').addEventListener('click', function(){
+  roster.forEach(function(e){ todaySel[mode].add(e.id); });
+  renderTodayList();
+  syncCounts();
+  queueSave();
+  drawPreview();
+});
+document.getElementById('selNone').addEventListener('click', function(){
+  todaySel[mode].clear();
+  renderTodayList();
+  syncCounts();
+  queueSave();
+  drawPreview();
+});
+
+/* ================= 등원 / 하원 ================= */
+var modeArrivalBtn = document.getElementById('modeArrival');
+var modeDepartureBtn = document.getElementById('modeDeparture');
+
+function switchMode(m){
+  if(m === mode) return;
+  todayMeta[mode].start = document.getElementById('startTime').value;
+  mode = m;
+  modeArrivalBtn.classList.toggle('on', mode === 'arrival');
+  modeDepartureBtn.classList.toggle('on', mode === 'departure');
+  document.getElementById('startTime').value = todayMeta[mode].start;
+  renderTodayList();
+  syncCounts();
+  routeShown = false;
+  MV.clear();
+  drawPreview();
+  mapTop.className = 'maptop';
+  tabResult.disabled = true;
+  bodyEl.innerHTML = emptyResultHtml();
+  clearValidation();
+  if(paneEl.result.classList.contains('on')) setTab('today');
+  queueSave();
+}
+modeArrivalBtn.addEventListener('click', function(){ switchMode('arrival'); });
+modeDepartureBtn.addEventListener('click', function(){ switchMode('departure'); });
+
+/* ================= 계산 버튼 ================= */
 calcBtn.addEventListener('click', function(){
+  clearValidation();
   var centerName = document.getElementById('centerName').value.trim();
   var centerAddr = centerAddrI.value.trim();
 
-  var rows = [];
-  Array.prototype.forEach.call(peopleEl.children, function(row){
-    var name = row.querySelector('.f-name').value.trim();
-    var addr = row.querySelector('.f-addr').value.trim();
-    if(!name && !addr) return;
-    rows.push({name:name || '(이름 없음)', addr:addr, row:row, hit:row._hit || null});
-  });
-
   if(!centerAddr){
-    show('<div class="alert"><b>센터 주소가 비어 있습니다.</b>송영이 어디서 출발하는지 알아야 순서를 정할 수 있습니다.</div>');
+    setTab('center');
+    showValidation('<div class="alert"><b>센터 주소가 비어 있습니다.</b>송영이 어디서 출발하는지 알아야 순서를 정할 수 있습니다.</div>');
     return;
   }
-  if(!rows.length){
-    show('<div class="alert"><b>어르신을 한 분 이상 입력해 주세요.</b>이름과 주소를 적으면 방문 순서를 찾아 드립니다.</div>');
+
+  var ids = Array.from(todaySel[mode]).filter(function(id){ return !!rosterById(id); });
+  var rowsAll = ids.map(function(id){ return rosterById(id); });
+
+  if(!rowsAll.length){
+    setTab('today');
+    showValidation('<div class="alert"><b>오늘 송영 대상을 한 분 이상 선택해 주세요.</b>어르신 탭에서 등록한 뒤, 오늘 송영 탭에서 체크해 주세요.</div>');
+    return;
+  }
+
+  var missingCoord = rowsAll.filter(function(e){ return e.lat == null; });
+  if(missingCoord.length){
+    setTab('roster');
+    showValidation('<div class="alert"><b>위치를 찾지 못한 어르신이 있습니다.</b>' +
+         '어르신 탭에서 수정을 눌러 주소를 다시 입력해 후보를 선택해 주세요.' +
+         '<ul>' + missingCoord.map(function(e){ return '<li>' + esc(e.name) + ' (' + esc(e.addr) + ')</li>'; }).join('') + '</ul></div>');
     return;
   }
 
@@ -1668,123 +2211,64 @@ calcBtn.addEventListener('click', function(){
     stopMin: parseFloat(document.getElementById('stopMin').value) || 0,
     factor: parseFloat(document.getElementById('factor').value) || 1.3,
     start: parseTime(document.getElementById('startTime').value),
-    cars: Math.min(Math.max(parseInt(document.getElementById('cars').value, 10) || 1, 1), 4),
+    cars: carCountNow(),
     seats: Math.min(Math.max(parseInt(document.getElementById('seats').value, 10) || 9, 1), 20),
-    traffic: document.getElementById('traffic').checked
+    traffic: document.getElementById('traffic').checked,
+    mode: mode
   };
+
+  var N = rowsAll.length;
+  if(N > opt.cars * opt.seats){
+    setTab('today');
+    showValidation('<div class="alert"><b>차량이 모자랍니다.</b>송영 대상자가 차량 수용 가능 인원보다 ' +
+         (N - opt.cars * opt.seats) + '명 많습니다. 차량 대수나 정원을 늘려 주세요.</div>');
+    return;
+  }
+
+  var rows = rowsAll.map(function(e){
+    return {name:e.name, addr:e.addr, hit:{lat:e.lat, lng:e.lng}, carPin:e.carPin || 0};
+  });
 
   saveState();
   calcBtn.disabled = true;
-  var total = rows.length + 1, done = 0;
-  statusEl.textContent = '주소 찾는 중 0/' + total;
-  function tick(){ done++; statusEl.textContent = '주소 찾는 중 ' + done + '/' + total; }
+  statusEl.textContent = '센터 위치 확인 중';
 
-  var job = (centerHit ? Promise.resolve(centerHit) : locate(centerAddr)).then(function(ch){
-    centerHit = ch;
-    tick();
-    if(ch){ setPin(centerPin, ch); bias = {lat:ch.lat, lng:ch.lng}; }
-    else setPin(centerPin, null);
-    var chain = Promise.resolve();
-    rows.forEach(function(p){
-      chain = chain.then(function(){
-        if(p.hit){ tick(); return; }
-        return locate(p.addr).then(function(hit){
-          p.hit = hit;
-          p.row._hit = hit;
-          setPin(p.row.querySelector('.pin'), hit);
-          tick();
-        });
-      });
-    });
-    return chain;
-  });
-
-  job.then(function(){
+  var centerJob = centerHit ? Promise.resolve(centerHit) : locate(centerAddr);
+  centerJob.then(function(ch){
     calcBtn.disabled = false;
     statusEl.textContent = '';
-    syncCount();
+    syncCounts();
+    centerHit = ch;
+    if(ch){ setPin(centerPin, ch); bias = {lat:ch.lat, lng:ch.lng}; }
+    else setPin(centerPin, null);
 
-    var missing = [];
-    if(!centerHit) missing.push('센터 (' + centerAddr + ')');
-    rows.forEach(function(p){ if(!p.hit) missing.push(p.name + ' (' + p.addr + ')'); });
-
-    if(missing.length){
-      show('<div class="alert"><b>주소를 찾지 못한 곳이 있습니다.</b>' +
-           '건물명을 빼거나 읍·면·동까지만 남기고 다시 적어 보세요. 입력 칸 아래에 뜨는 후보를 눌러도 됩니다.' +
-           '<ul>' + missing.map(function(t){ return '<li>' + esc(t) + '</li>'; }).join('') + '</ul></div>');
+    if(!ch){
+      setTab('center');
+      showValidation('<div class="alert"><b>센터 주소를 찾지 못했습니다.</b>건물명을 빼거나 다시 입력해 후보를 선택해 주세요.</div>');
       return;
     }
 
-    var pts = [centerHit].concat(rows.map(function(p){ return p.hit; }));
+    var pts = [ch].concat(rows.map(function(p){ return p.hit; }));
     var D = matrix(pts, opt.factor);
-    var N = rows.length;
+    var pins = rows.map(function(p){ return p.carPin; });
 
-    if(N > opt.cars * opt.seats){
-      show('<div class="alert"><b>차량이 모자랍니다.</b>' +
-           opt.cars + '대에 정원 ' + opt.seats + '명씩이면 ' + (opt.cars * opt.seats) +
-           '명까지 태울 수 있는데 ' + N + '명을 넣으셨습니다. ' +
-           '차량 대수나 정원을 늘리거나, 두 번에 나눠 운행하는 것으로 잡아 주세요.</div>');
+    var groups = splitCars(D, N, opt.cars, opt.seats, pts, opt, pins);
+    if(groups && groups.error === 'pinover'){
+      setTab('today');
+      showValidation('<div class="alert"><b>차량 고정 인원이 정원을 초과했습니다.</b>' +
+           groups.car + '호차에 고정된 인원이 ' + groups.count + '명인데 정원은 ' + groups.cap +
+           '명입니다. 오늘 송영 탭에서 배정을 조정해 주세요.</div>');
       return;
     }
 
-    var groups = splitCars(D, N, opt.cars, opt.seats, pts, opt);
-
-    // 오래 걸리는 차를 1호차로 올려 두면 인쇄물에서 보기 편하다
-    groups.sort(function(a, b){
-      return carMinutes(routeFor(D, b, false).dist, b.length, opt) -
-             carMinutes(routeFor(D, a, false).dist, a.length, opt);
-    });
-
-    render({name:centerName, addr:centerAddr, hit:centerHit}, rows,
-           buildPlans(D, groups, rows, opt), opt, D);
+    clearValidation();
+    render({name:centerName, addr:centerAddr, hit:ch}, rows, buildPlans(D, groups, rows, opt), opt, D);
   }).catch(function(){
     calcBtn.disabled = false;
     statusEl.textContent = '';
-    syncCount();
-    show('<div class="alert"><b>주소를 찾는 중 문제가 생겼습니다.</b>인터넷 연결을 확인하고 다시 눌러 주세요.</div>');
+    syncCounts();
+    showValidation('<div class="alert"><b>주소를 찾는 중 문제가 생겼습니다.</b>인터넷 연결을 확인하고 다시 눌러 주세요.</div>');
   });
-});
-
-/* ================= 버튼들 ================= */
-document.getElementById('addRow').addEventListener('click', function(){
-  addRow().querySelector('.f-name').focus();
-});
-document.getElementById('reset').addEventListener('click', function(){
-  // 센터는 매일 같으므로 그대로 두고 어르신 명단만 비운다
-  peopleEl.innerHTML = '';
-  addRow(); addRow(); addRow();
-  routeShown = false;
-  MV.clear();
-  drawPreview();
-  mapTop.className = 'maptop';
-  tabResult.disabled = true;
-  bodyEl.innerHTML = '<div class="empty">아래 <b>최적경로 계산</b>을 누르면<br>방문 순서가 여기에 나옵니다.</div>';
-  setTab('input');
-  queueSave();
-});
-document.getElementById('bulkGo').addEventListener('click', function(){
-  var lines = document.getElementById('bulk').value.split(/\r?\n/).filter(function(l){ return l.trim(); });
-  if(!lines.length) return;
-  peopleEl.innerHTML = '';
-  lines.forEach(function(l){
-    var p = l.split(/\t|,|\|/).map(function(s){ return s.trim(); });
-    addRow(p[0] || '', p.slice(1).join(' ').trim());
-  });
-  if(!peopleEl.children.length) addRow();
-  queueSave();
-});
-document.getElementById('sample').addEventListener('click', function(){
-  document.getElementById('centerName').value = '햇살주야간보호센터';
-  centerAddrI.value = '전주시 완산구 효자로 100';
-  centerHit = null;
-  centerPin.textContent = ''; centerPin.className = 'pin';
-  peopleEl.innerHTML = '';
-  addRow('홍길동', '전주시 완산구 서원로 10');
-  addRow('김영희', '전주시 완산구 백제대로 250');
-  addRow('박철수', '전주시 덕진구 아중로 31');
-  addRow('이순자', '전주시 덕진구 백제대로 700');
-  addRow('최말순', '전주시 완산구 홍산로 90');
-  queueSave();
 });
 
 /* ----- 시작할 때 주소 검색 상태 확인 ----- */
@@ -1826,8 +2310,23 @@ MV.start().then(function(kind){
   drawPreview();
 });
 
-if(!loadState()){ addRow(); addRow(); addRow(); }
-syncCount();
+migrateV1();
+loadState();
+modeArrivalBtn.classList.toggle('on', mode === 'arrival');
+modeDepartureBtn.classList.toggle('on', mode === 'departure');
+document.getElementById('startTime').value = todayMeta[mode].start;
+fillCarOptions(rCarSel);
+syncCounts();
+
+// 어르신 주소록은 IndexedDB 에서 비동기로 불러온다. 불러오는 동안에도
+// 센터 입력 등 나머지 화면은 바로 쓸 수 있어야 한다.
+idbAll().then(function(list){
+  roster = list;
+  renderRosterList();
+  renderTodayList();
+  syncCounts();
+  drawPreview();
+});
 
 // 저장된 센터 주소가 있으면 시작하자마자 지도에 찍어 준다.
 // 다시 들어왔을 때 빈 지도가 아니라 우리 센터가 먼저 보이게 하려는 것이다.
