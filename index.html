@@ -653,6 +653,25 @@ function esc(s){
   });
 }
 
+/* ----- 실제 도로 경로 (카카오모빌리티) -----
+   센터에서 출발해 이미 정한 순서대로 들렀다가 센터로 돌아오는 구간을
+   실제 도로 기준 거리·시간·좌표로 바꿔 온다. 서버 키가 없거나, 모빌리티
+   상품을 신청하지 않았거나, 네트워크 문제가 있으면 null 을 돌려주고
+   화면은 그대로 직선거리 추정을 쓴다. */
+function fetchRoadRoute(center, pts){
+  if(!pts.length || pts.length > 28) return Promise.resolve(null);
+  return fetch('/api/directions', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({origin:center, destination:center, waypoints:pts}),
+    signal: timeout(12000)
+  }).then(function(r){
+    return r.ok ? r.json() : null;
+  }).then(function(d){
+    return (d && d.ok) ? d : null;
+  }).catch(function(){ return null; });
+}
+
 /* ================= 지도 ================= */
 /* 카카오맵을 먼저 쓰고, 자바스크립트 키가 없거나 못 불러오면
    OpenStreetMap 으로 내려간다. 바깥 코드는 어느 쪽이 떴는지 몰라도 된다. */
@@ -872,13 +891,21 @@ function drawRoute(ch, rows, cars, total){
 
   cars.forEach(function(car, ci){
     var color = CAR_COLORS[ci % CAR_COLORS.length];
-    var pts = [[ch.lat, ch.lng]];
-    car.order.forEach(function(i){
-      var p = [rows[i-1].hit.lat, rows[i-1].hit.lng];
-      pts.push(p);
-      allPts.push(p);   // 센터는 위에서 한 번만 넣었다
-    });
-    pts.push([ch.lat, ch.lng]);
+    var pts;
+    // 실제 도로 경로를 받아 온 차량은 그 좌표를 그대로 이어 그린다.
+    // 못 받아 온 차량은 지점끼리 직선으로 잇는다(기존 방식).
+    if(car.roadLegs && car.roadLegs.length === car.order.length + 1){
+      pts = [[ch.lat, ch.lng]];
+      car.roadLegs.forEach(function(leg){
+        (leg.path || []).forEach(function(p){ pts.push(p); });
+      });
+      pts.push([ch.lat, ch.lng]);
+    } else {
+      pts = [[ch.lat, ch.lng]];
+      car.order.forEach(function(i){ pts.push([rows[i-1].hit.lat, rows[i-1].hit.lng]); });
+      pts.push([ch.lat, ch.lng]);
+    }
+    car.order.forEach(function(i){ allPts.push([rows[i-1].hit.lat, rows[i-1].hit.lng]); });
     // 흰 선을 깔고 그 위에 차량 색을 얹어야 지도 위에서 또렷하다
     MV.line(pts, '#ffffff', 9);
     MV.line(pts, color, 5);
@@ -1670,8 +1697,13 @@ function showPlan(pick){
   var cars = plan.cars;
   var multi = cars.length > 1;
   var visited = cars.reduce(function(n, c){ return n + c.order.length; }, 0);
-  var total = cars.reduce(function(d, c){ return d + c.dist; }, 0);
+  // 실제 도로 경로를 받아 온 차량은 그 거리를, 아직 못 받아 온 차량은
+  // 직선거리 추정을 쓴다.
+  function realDist(c){ return c.roadDist != null ? c.roadDist : c.dist; }
+  var total = cars.reduce(function(d, c){ return d + realDist(c); }, 0);
   var allExact = cars.every(function(c){ return c.exact; });
+  var ridersCars = cars.filter(function(c){ return c.order.length; });
+  var roadAll = ridersCars.length > 0 && ridersCars.every(function(c){ return c.roadDist != null; });
 
   var longest = 0, lastBack = null;
   cars.forEach(function(c){
@@ -1714,7 +1746,7 @@ function showPlan(pick){
     if(!car.order.length) return; // 대수만 늘려 두고 아무도 안 탄 차는 카드에 안 보여준다
 
     var color = CAR_COLORS[ci % CAR_COLORS.length];
-    var carDist = car.dist;
+    var carDist = realDist(car);
     var carMin = car.order.length ? carTime(curCtx.D, car.order, opt) : 0;
 
     if(multi){
@@ -1752,7 +1784,9 @@ function showPlan(pick){
            (s.where ? '<div class="where">' + esc(s.where) + '</div>' : '') + '</div></li>';
 
       if(i < seq.length - 1){
-        var d = haversine(pts[i], pts[i+1]) * opt.factor;
+        // 실제 도로 경로를 받아 온 구간은 그 거리를, 아니면 직선거리 추정을 쓴다
+        var realLeg = (car.roadLegs && car.roadLegs.length === car.order.length + 1) ? car.roadLegs[i] : null;
+        var d = realLeg ? realLeg.km : haversine(pts[i], pts[i+1]) * opt.factor;
         // 그 구간을 실제로 달리는 시각의 도로 사정으로 잰다
         var legMin = d / speedAt(clock, opt) * 60;
         if(clock !== null) clock += legMin + (i > 0 ? opt.stopMin : 0);
@@ -1781,8 +1815,10 @@ function showPlan(pick){
   }
 
   h += '<p class="note">주소는 ' + (kakaoOk ? '카카오 지도' : '공개 지도 데이터') + '에서 찾았습니다. ' +
-       '거리는 두 지점의 직선거리에 보정 계수 ' + opt.factor +
-       '를 곱한 추정값입니다. 실제 도로와 교통 상황은 반영되지 않으니 순서를 잡는 참고 자료로 쓰시고, 최종 판단은 운행 담당자가 해 주세요.' +
+       (roadAll
+         ? '거리는 카카오모빌리티 실제 도로 경로를 기준으로 잰 값입니다.'
+         : '거리는 두 지점의 직선거리에 보정 계수 ' + opt.factor +
+           '를 곱한 추정값입니다. 실제 도로와 교통 상황은 반영되지 않으니 순서를 잡는 참고 자료로 쓰시고, 최종 판단은 운행 담당자가 해 주세요.') +
        (multi ? ' 차량 배정은 가장 오래 걸리는 차의 시간을 줄이는 쪽으로 잡았습니다. 총 주행거리가 가장 짧은 배정과는 다를 수 있습니다.' : '') +
        (allExact ? '' : ' 한 차량이 15명을 넘어 근사 계산을 했습니다. 최적에 가깝지만 완전한 최단 경로가 아닐 수 있습니다.') + '</p>';
 
@@ -1798,7 +1834,7 @@ function showPlan(pick){
     cars.forEach(function(car, ci){
       if(multi){
         lines.push('');
-        lines.push('[' + (ci+1) + '호차] ' + car.order.length + '명 · ' + car.dist.toFixed(1) + 'km');
+        lines.push('[' + (ci+1) + '호차] ' + car.order.length + '명 · ' + realDist(car).toFixed(1) + 'km');
       }
       car.order.forEach(function(pi, k){
         lines.push((k+1) + '. ' + people[pi-1].name + ' — ' + people[pi-1].addr);
@@ -1820,6 +1856,30 @@ function showPlan(pick){
     (multi ? cars.length + '대 · ' : '') + visited + '명 · ' + total.toFixed(1) + 'km</p>';
 
   drawRoute(center.hit, people, cars, total);
+  loadRoadForPlan(plan, pick);
+}
+
+/* 이미 정한 방문 순서를 실제 도로 경로로 바꿔 본다. 차 하나마다 한 번만
+   시도하고, 받아 오면 지금 보이는 계획이 여전히 이 계획일 때만 다시 그린다.
+   실패해도 손대지 않고 직선거리 추정을 그대로 쓴다. */
+function loadRoadForPlan(plan, pick){
+  var center = curCtx.center, people = curCtx.people;
+  var jobs = plan.cars.filter(function(c){ return c.order.length && !c.roadTried; });
+  if(!jobs.length) return;
+  jobs.forEach(function(c){ c.roadTried = true; });
+  Promise.all(jobs.map(function(c){
+    var pts = c.order.map(function(i){ return people[i-1].hit; });
+    return fetchRoadRoute(center.hit, pts).then(function(d){
+      if(d && d.legs && d.legs.length === c.order.length + 1){
+        c.roadDist = d.distance / 1000;
+        c.roadLegs = d.legs.map(function(l){
+          return {km: l.distance / 1000, min: l.duration / 60, path: l.path};
+        });
+      }
+    });
+  })).then(function(){
+    if(curPlans && curPlans[pick] === plan && curPick === pick) showPlan(pick);
+  });
 }
 
 /* 목록의 한 줄을 누르면 지도가 그 지점으로 움직인다 */
