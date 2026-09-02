@@ -6,7 +6,6 @@
 <title>송영 경로 만들기</title>
 <meta name="description" content="주야간보호센터 송영 최적경로를 지도 위에서 계산합니다.">
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
 *{box-sizing:border-box}
 :root{
@@ -196,6 +195,7 @@ input:focus,textarea:focus{outline:none;border-color:var(--brand);background:#ff
       <h1>송영 경로 만들기</h1>
       <p class="lede">센터와 어르신 주소만 적으면 가장 짧은 방문 순서를 찾아 드립니다.</p>
       <p class="srcline" id="srcline">주소 검색 준비 중</p>
+      <p class="srcline" id="mapline">지도 준비 중</p>
     </div>
 
     <div class="tabs">
@@ -292,7 +292,6 @@ input:focus,textarea:focus{outline:none;border-color:var(--brand);background:#ff
   </main>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
 (function(){
 "use strict";
@@ -442,101 +441,226 @@ function esc(s){
 }
 
 /* ================= 지도 ================= */
-var mapObj = null, routeLayer = null, markers = [], routeShown = false;
+/* 카카오맵을 먼저 쓰고, 자바스크립트 키가 없거나 못 불러오면
+   OpenStreetMap 으로 내려간다. 바깥 코드는 어느 쪽이 떴는지 몰라도 된다. */
 var mapTop = document.getElementById('maptop');
+var routeShown = false;
 
-var mapOff = false;
+var MV = (function(){
+  var kind = null;      // 'kakao' | 'osm' | null
+  var why = null;       // 카카오맵을 못 쓴 이유: 'nokey' | 'failed'
+  var map = null;
+  var layer = null;     // OSM 전용 묶음
+  var drawn = [];       // 카카오 전용: 지울 것들을 기억해 둔다
+  var marks = [];       // 목록에서 눌렀을 때 찾아갈 지점
+  var el = document.getElementById('map');
 
-function ensureMap(){
-  if(mapObj) return mapObj;
-  if(typeof L === 'undefined'){
-    // 기관 방화벽 등으로 지도 라이브러리를 못 받아오는 경우가 있다.
-    // 지도는 포기하더라도 순서 계산과 인쇄는 그대로 쓸 수 있게 안내만 남긴다.
-    if(!mapOff){
-      mapOff = true;
-      document.getElementById('map').innerHTML =
-        '<div class="mapoff"><b>지도를 불러오지 못했습니다</b>' +
-        '인터넷 연결이나 기관 방화벽 때문일 수 있습니다. ' +
-        '지도가 없어도 방문 순서 계산과 인쇄는 그대로 됩니다.</div>';
-      var lg = document.querySelector('.legend');
-      if(lg) lg.style.display = 'none';
-    }
-    return null;
+  function off(){
+    kind = null;
+    el.innerHTML = '<div class="mapoff"><b>지도를 불러오지 못했습니다</b>' +
+      '인터넷 연결이나 기관 방화벽 때문일 수 있습니다. ' +
+      '지도가 없어도 방문 순서 계산과 인쇄는 그대로 됩니다.</div>';
+    var lg = document.querySelector('.legend');
+    if(lg) lg.style.display = 'none';
   }
-  mapObj = L.map('map', {zoomControl:false}).setView([36.5, 127.8], 7);
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> 기여자'
-  }).addTo(mapObj);
-  L.control.zoom({position:'bottomright'}).addTo(mapObj);
-  routeLayer = L.layerGroup().addTo(mapObj);
-  return mapObj;
-}
 
-function pinIcon(label, kind){
-  var size = kind === 'dot' ? 17 : 30;
-  return L.divIcon({
-    className:'',
-    html:'<div class="mk mk-' + kind + '">' + esc(label) + '</div>',
-    iconSize:[size,size], iconAnchor:[size/2,size/2], popupAnchor:[0,-(size/2)+2]
-  });
-}
+  function loadScript(src){
+    return new Promise(function(res, rej){
+      var t = setTimeout(function(){ rej(new Error('timeout')); }, 9000);
+      var el2 = document.createElement('script');
+      el2.src = src;
+      el2.async = true;
+      el2.onload = function(){ clearTimeout(t); res(); };
+      el2.onerror = function(){ clearTimeout(t); rej(new Error('load')); };
+      document.head.appendChild(el2);
+    });
+  }
 
-function addMk(hit, label, title, kind){
-  var m = L.marker([hit.lat, hit.lng], {icon:pinIcon(label, kind), title:title}).addTo(routeLayer);
-  if(title) m.bindPopup('<b>' + esc(title) + '</b>' + (hit.title ? '<br>' + esc(hit.title) : ''));
-  markers.push(m);
-  return m;
-}
+  function startKakao(key){
+    return loadScript('https://dapi.kakao.com/v2/maps/sdk.js?autoload=false&appkey=' +
+                      encodeURIComponent(key)).then(function(){
+      return new Promise(function(res, rej){
+        if(typeof kakao === 'undefined' || !kakao.maps) return rej(new Error('sdk'));
+        kakao.maps.load(function(){
+          map = new kakao.maps.Map(el, {
+            center: new kakao.maps.LatLng(36.5, 127.8),
+            level: 12
+          });
+          map.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
+          kind = 'kakao';
+          res();
+        });
+      });
+    });
+  }
 
-function fit(pts){
-  if(!mapObj || !pts.length) return;
-  if(pts.length === 1) mapObj.setView(pts[0], 16);
-  else mapObj.fitBounds(L.latLngBounds(pts), {padding:[55,55], maxZoom:16});
-}
+  // OpenStreetMap 은 대비책이므로, 카카오맵이 안 될 때만 내려받는다
+  function startOsm(){
+    var CDN = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.';
+    var css = document.createElement('link');
+    css.rel = 'stylesheet';
+    css.href = CDN + 'css';
+    document.head.appendChild(css);
+    return loadScript(CDN + 'js').then(function(){ buildOsm(); });
+  }
+
+  function buildOsm(){
+    if(typeof L === 'undefined') throw new Error('leaflet');
+    map = L.map(el, {zoomControl:false}).setView([36.5, 127.8], 7);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> 기여자'
+    }).addTo(map);
+    L.control.zoom({position:'bottomright'}).addTo(map);
+    layer = L.layerGroup().addTo(map);
+    kind = 'osm';
+  }
+
+  return {
+    kind: function(){ return kind; },
+    why: function(){ return why; },
+
+    start: function(){
+      return fetch('/api/mapkey', {signal:timeout(6000)}).then(function(r){
+        return r.ok ? r.json() : null;
+      }).catch(function(){
+        return null;
+      }).then(function(d){
+        var key = d && d.key;
+        if(!key){ why = 'nokey'; return null; }
+        return startKakao(key).catch(function(){ why = 'failed'; return null; });
+      }).then(function(){
+        if(kind) return kind;
+        return startOsm().then(function(){
+          return kind;
+        }).catch(function(){
+          off();
+          return null;
+        });
+      });
+    },
+
+    clear: function(){
+      marks = [];
+      if(kind === 'osm' && layer) layer.clearLayers();
+      else if(kind === 'kakao'){
+        drawn.forEach(function(o){ o.setMap(null); });
+        drawn = [];
+      }
+    },
+
+    marker: function(lat, lng, label, cls, title){
+      marks.push({lat:lat, lng:lng});
+      if(!kind) return;
+      var html = '<div class="mk mk-' + cls + '">' + esc(label) + '</div>';
+      if(kind === 'osm'){
+        var size = cls === 'dot' ? 17 : 30;
+        L.marker([lat, lng], {
+          icon: L.divIcon({className:'', html:html, iconSize:[size,size], iconAnchor:[size/2,size/2]}),
+          title: title || ''
+        }).addTo(layer);
+        return;
+      }
+      var ov = new kakao.maps.CustomOverlay({
+        position: new kakao.maps.LatLng(lat, lng),
+        content: html, xAnchor:0.5, yAnchor:0.5,
+        zIndex: cls === 'dot' ? 1 : 2
+      });
+      ov.setMap(map);
+      drawn.push(ov);
+    },
+
+    line: function(pts, color, weight){
+      if(!kind) return;
+      if(kind === 'osm'){
+        L.polyline(pts, {color:color, weight:weight, opacity:.95, lineJoin:'round'}).addTo(layer);
+        return;
+      }
+      var pl = new kakao.maps.Polyline({
+        path: pts.map(function(p){ return new kakao.maps.LatLng(p[0], p[1]); }),
+        strokeWeight: weight, strokeColor: color, strokeOpacity: 0.95, strokeStyle: 'solid'
+      });
+      pl.setMap(map);
+      drawn.push(pl);
+    },
+
+    fit: function(pts){
+      if(!kind || !pts.length) return;
+      if(kind === 'osm'){
+        if(pts.length === 1) map.setView(pts[0], 16);
+        else map.fitBounds(L.latLngBounds(pts), {padding:[55,55], maxZoom:16});
+        return;
+      }
+      if(pts.length === 1){
+        map.setCenter(new kakao.maps.LatLng(pts[0][0], pts[0][1]));
+        map.setLevel(4);
+        return;
+      }
+      var b = new kakao.maps.LatLngBounds();
+      pts.forEach(function(p){ b.extend(new kakao.maps.LatLng(p[0], p[1])); });
+      map.setBounds(b, 60, 60, 60, 60);
+    },
+
+    focus: function(i){
+      var m = marks[i];
+      if(!m || !kind) return;
+      if(kind === 'osm'){
+        map.setView([m.lat, m.lng], Math.max(map.getZoom(), 15), {animate:true});
+        return;
+      }
+      map.setCenter(new kakao.maps.LatLng(m.lat, m.lng));
+      if(map.getLevel() > 4) map.setLevel(4);
+    },
+
+    refresh: function(){
+      if(!map) return;
+      if(kind === 'osm') map.invalidateSize();
+      else if(kind === 'kakao') map.relayout();
+    }
+  };
+})();
 
 /* 계산 전: 찍힌 위치만 회색 점으로 미리 보여 준다 */
 function drawPreview(){
-  if(routeShown || !ensureMap()) return;
-  routeLayer.clearLayers();
-  markers = [];
+  if(routeShown) return;
+  MV.clear();
   var pts = [];
   if(centerHit){
-    addMk(centerHit, '센터', document.getElementById('centerName').value.trim() || '센터', 'center');
+    MV.marker(centerHit.lat, centerHit.lng, '센터', 'center',
+              document.getElementById('centerName').value.trim() || '센터');
     pts.push([centerHit.lat, centerHit.lng]);
   }
   Array.prototype.forEach.call(peopleEl.children, function(row){
     var h = row._hit;
     if(!h) return;
-    addMk(h, '', row.querySelector('.f-name').value.trim() || '어르신', 'dot');
+    MV.marker(h.lat, h.lng, '', 'dot', row.querySelector('.f-name').value.trim() || '어르신');
     pts.push([h.lat, h.lng]);
   });
-  fit(pts);
+  MV.fit(pts);
 }
 
 /* 계산 후: 순서대로 선을 잇고 번호를 매긴다 */
 function drawRoute(ch, rows, order, total){
-  if(!ensureMap()) return;
-  routeLayer.clearLayers();
-  markers = [];
+  routeShown = true;
+  mapTop.textContent = rows.length + '명 · ' + total.toFixed(1) + 'km';
+  mapTop.className = 'maptop on';
 
+  MV.clear();
   var pts = [[ch.lat, ch.lng]];
   order.forEach(function(i){ pts.push([rows[i-1].hit.lat, rows[i-1].hit.lng]); });
   pts.push([ch.lat, ch.lng]);
 
-  // 흰 테두리를 깔아야 지도 위에서 선이 또렷하게 보인다
-  L.polyline(pts, {color:'#fff', weight:9, opacity:.9, lineJoin:'round'}).addTo(routeLayer);
-  L.polyline(pts, {color:'#f4623a', weight:5, opacity:.95, lineJoin:'round'}).addTo(routeLayer);
+  // 흰 선을 깔고 그 위에 주황 선을 얹어야 지도 위에서 또렷하다
+  MV.line(pts, '#ffffff', 9);
+  MV.line(pts, '#f4623a', 5);
 
-  addMk(ch, '센터', document.getElementById('centerName').value.trim() || '센터', 'center');
+  MV.marker(ch.lat, ch.lng, '센터', 'center',
+            document.getElementById('centerName').value.trim() || '센터');
   order.forEach(function(pi, k){
-    addMk(rows[pi-1].hit, String(k+1), rows[pi-1].name, 'stop');
+    MV.marker(rows[pi-1].hit.lat, rows[pi-1].hit.lng, String(k+1), 'stop', rows[pi-1].name);
   });
 
-  fit(pts);
-  routeShown = true;
-  mapTop.textContent = rows.length + '명 · ' + total.toFixed(1) + 'km';
-  mapTop.className = 'maptop on';
+  MV.fit(pts);
 }
 
 /* ================= 자동 이어쓰기 ================= */
@@ -787,7 +911,7 @@ function setTab(which){
   paneInput.classList.toggle('on', isIn);
   paneResult.classList.toggle('on', !isIn);
   pbody.scrollTop = 0;
-  if(mapObj) setTimeout(function(){ mapObj.invalidateSize(); }, 60);
+  setTimeout(function(){ MV.refresh(); }, 60);
 }
 tabInput.addEventListener('click', function(){ setTab('input'); });
 tabResult.addEventListener('click', function(){ setTab('result'); });
@@ -875,11 +999,8 @@ function render(center, people, order, total, exact, opt){
 /* 목록의 한 줄을 누르면 지도가 그 지점으로 움직인다 */
 bodyEl.addEventListener('click', function(e){
   var li = e.target.closest ? e.target.closest('.stop') : null;
-  if(!li || !mapObj) return;
-  var m = markers[+li.getAttribute('data-m')];
-  if(!m) return;
-  mapObj.setView(m.getLatLng(), Math.max(mapObj.getZoom(), 15), {animate:true});
-  m.openPopup();
+  if(!li) return;
+  MV.focus(+li.getAttribute('data-m'));
   Array.prototype.forEach.call(bodyEl.querySelectorAll('.stop'), function(x){ x.classList.remove('cur'); });
   li.classList.add('cur');
 });
@@ -995,8 +1116,7 @@ document.getElementById('reset').addEventListener('click', function(){
   peopleEl.innerHTML = '';
   addRow(); addRow(); addRow();
   routeShown = false;
-  markers = [];
-  if(routeLayer) routeLayer.clearLayers();
+  MV.clear();
   drawPreview();
   mapTop.className = 'maptop';
   tabResult.disabled = true;
@@ -1045,7 +1165,18 @@ function checkProvider(){
   });
 }
 
-ensureMap();
+var mapLine = document.getElementById('mapline');
+MV.start().then(function(kind){
+  mapLine.className = kind ? 'srcline ok' : 'srcline';
+  mapLine.textContent =
+      kind === 'kakao' ? '카카오맵 사용 중' :
+      kind === 'osm'   ? ('OpenStreetMap 지도 사용 중 · ' + (MV.why() === 'failed'
+                            ? '카카오맵을 불러오지 못했습니다 (키와 도메인 등록을 확인해 주세요)'
+                            : '카카오맵 키가 설정되지 않았습니다')) :
+                         '지도를 표시하지 못했습니다';
+  drawPreview();
+});
+
 if(!loadState()){ addRow(); addRow(); addRow(); }
 
 // 저장된 센터 주소가 있으면 시작하자마자 지도에 찍어 준다.
@@ -1061,7 +1192,7 @@ checkProvider().then(function(){
     drawPreview();
   });
 });
-window.addEventListener('resize', function(){ if(mapObj) mapObj.invalidateSize(); });
+window.addEventListener('resize', function(){ MV.refresh(); });
 })();
 </script>
 </body>
