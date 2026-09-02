@@ -6,6 +6,8 @@
 // 신청하지 않았거나 이 API 가 실패해도 문제 없다 — 화면은 자동으로
 // 직선거리 추정으로 대체된다.)
 
+import { requireUser } from './_auth.js';
+
 const WINDOW_MS = 60 * 1000;
 const MAX_PER_WINDOW = 30; // 길찾기는 주소 검색보다 무거우니 더 낮게 잡는다
 const hits = new Map();
@@ -34,6 +36,9 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(200).json({ ok: false, error: 'method' });
   }
+
+  const user = await requireUser(req, res);
+  if (!user) return;
 
   const key = process.env.KAKAO_REST_KEY;
   if (!key) {

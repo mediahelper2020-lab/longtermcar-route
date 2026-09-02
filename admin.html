@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>송영MAP 관리자</title>
+<meta name="robots" content="noindex, nofollow">
+<style>
+*{box-sizing:border-box}
+:root{
+  --bg:#e9ecf1; --panel:#fff; --ink:#12141a; --ink-2:#3c4350; --muted:#6f7885;
+  --line:#e5e8ee; --line-2:#d2d8e2; --brand:#1257c4; --brand-dk:#0d4099;
+  --ok:#12805c; --ok-soft:#e6f4ee; --bad:#c8372d; --bad-soft:#fbe9e7;
+}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Pretendard","Malgun Gothic",system-ui,sans-serif;
+  font-size:15px;line-height:1.5}
+.wrap{max-width:720px;margin:0 auto;padding:34px 20px 60px}
+h1{font-size:20px;font-weight:800;margin:0 0 4px;letter-spacing:-.02em}
+.lede{margin:0 0 24px;color:var(--muted);font-size:13.5px}
+.card{background:var(--panel);border-radius:14px;box-shadow:0 2px 12px rgba(16,24,40,.08);
+  padding:20px 20px 22px;margin-bottom:18px}
+.card h2{font-size:15px;margin:0 0 13px;font-weight:800}
+label{display:block;font-size:12.5px;color:var(--muted);margin:0 0 4px;font-weight:600}
+input{width:100%;padding:10px 11px;border:1.5px solid var(--line-2);border-radius:9px;
+  font:inherit;font-size:14px}
+input:focus{outline:none;border-color:var(--brand)}
+.row{display:flex;gap:10px}
+.row>div{flex:1}
+button{border:0;border-radius:9px;padding:10px 16px;font:inherit;font-size:13.5px;font-weight:800;
+  cursor:pointer;background:var(--brand);color:#fff}
+button:hover{background:var(--brand-dk)}
+button:disabled{opacity:.5;cursor:default}
+button.ghost{background:none;color:var(--muted);font-weight:600;padding:6px 10px}
+button.ghost:hover{background:var(--bad-soft);color:var(--bad)}
+.msg{font-size:12.5px;margin:10px 0 0;color:var(--muted)}
+.msg.bad{color:var(--bad);font-weight:700}
+.msg.ok{color:var(--ok);font-weight:700}
+table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:4px}
+th,td{text-align:left;padding:9px 6px;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-weight:700;font-size:12px}
+.tag{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11.5px;font-weight:700}
+.tag.ok{background:var(--ok-soft);color:var(--ok)}
+.tag.bad{background:var(--bad-soft);color:var(--bad)}
+.empty{color:var(--muted);font-size:13px;padding:14px 0;text-align:center}
+#gate{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:99}
+#gate .card{width:100%;max-width:340px}
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <div class="card">
+    <h2>관리자 비밀번호</h2>
+    <input type="password" id="pw" placeholder="비밀번호" autocomplete="current-password">
+    <div style="margin-top:10px"><button type="button" id="pwGo" style="width:100%">들어가기</button></div>
+    <p class="msg" id="pwMsg"></p>
+  </div>
+</div>
+
+<div class="wrap" id="main" style="display:none">
+  <h1>송영MAP 이용자 관리</h1>
+  <p class="lede">여기서 등록한 이메일을 가진 사람만 송영MAP을 쓸 수 있습니다. 기본 이용 기간은 1년입니다.</p>
+
+  <div class="card">
+    <h2>이용자 등록 / 기간 연장</h2>
+    <div class="row">
+      <div>
+        <label>이메일</label>
+        <input type="email" id="newEmail" placeholder="이름@기관.com" autocomplete="off">
+      </div>
+      <div style="flex:0 0 90px">
+        <label>기간(년)</label>
+        <input type="number" id="newYears" value="1" min="0.1" max="5" step="0.5">
+      </div>
+    </div>
+    <div style="margin-top:12px"><button type="button" id="addGo">등록 / 연장</button></div>
+    <p class="msg" id="addMsg"></p>
+  </div>
+
+  <div class="card">
+    <h2>등록된 이용자</h2>
+    <div id="listWrap"><p class="empty">불러오는 중…</p></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var pw = null;
+  var gate = document.getElementById('gate');
+  var main = document.getElementById('main');
+  var pwInput = document.getElementById('pw');
+  var pwGo = document.getElementById('pwGo');
+  var pwMsg = document.getElementById('pwMsg');
+  var listWrap = document.getElementById('listWrap');
+  var addMsg = document.getElementById('addMsg');
+
+  function fmt(iso){
+    var d = new Date(iso);
+    if(isNaN(d.getTime())) return iso;
+    return d.getFullYear() + '.' + (d.getMonth()+1) + '.' + d.getDate();
+  }
+  function esc(s){
+    return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];
+    });
+  }
+
+  function call(method, body){
+    return fetch('/api/admin-users', {
+      method: method,
+      headers: Object.assign({'Content-Type':'application/json'}, pw ? {'X-Admin-Password': pw} : {}),
+      body: body ? JSON.stringify(body) : undefined
+    }).then(function(r){ return r.json(); });
+  }
+
+  function errText(code){
+    return code === 'bad_password'         ? '비밀번호가 틀렸습니다.'
+         : code === 'admin_not_configured' ? '서버에 ADMIN_PASSWORD 환경변수가 없습니다.'
+         : code === 'directory_unavailable'? '이용자 명단을 불러올 수 없습니다. Edge Config 연결을 확인해 주세요.'
+         : code === 'no_write_config'      ? '쓰기 설정이 안 돼 있습니다. VERCEL_API_TOKEN / EDGE_CONFIG_ID 를 확인해 주세요.'
+         : code === 'bad_email'            ? '이메일 형식을 확인해 주세요.'
+         :                                    '문제가 생겼습니다(' + (code || '알 수 없음') + ').';
+  }
+
+  function renderList(users){
+    var emails = Object.keys(users || {}).sort();
+    if(!emails.length){
+      listWrap.innerHTML = '<p class="empty">등록된 이용자가 없습니다.</p>';
+      return;
+    }
+    var now = Date.now();
+    var html = '<table><thead><tr><th>이메일</th><th>등록일</th><th>만료일</th><th>상태</th><th></th></tr></thead><tbody>';
+    emails.forEach(function(email){
+      var e = users[email];
+      var active = e.expiresAt && new Date(e.expiresAt).getTime() > now;
+      html += '<tr><td>' + esc(email) + '</td>' +
+              '<td>' + (e.addedAt ? fmt(e.addedAt) : '') + '</td>' +
+              '<td>' + (e.expiresAt ? fmt(e.expiresAt) : '') + '</td>' +
+              '<td><span class="tag ' + (active ? 'ok' : 'bad') + '">' + (active ? '이용 가능' : '만료') + '</span></td>' +
+              '<td><button type="button" class="ghost" data-del="' + esc(email) + '">삭제</button></td></tr>';
+    });
+    html += '</tbody></table>';
+    listWrap.innerHTML = html;
+  }
+
+  function refresh(){
+    listWrap.innerHTML = '<p class="empty">불러오는 중…</p>';
+    call('GET').then(function(d){
+      if(d && d.ok) renderList(d.users);
+      else listWrap.innerHTML = '<p class="empty" style="color:var(--bad)">' + errText(d && d.error) + '</p>';
+    });
+  }
+
+  function tryPw(){
+    var v = pwInput.value;
+    if(!v) return;
+    pw = v;
+    pwGo.disabled = true;
+    pwMsg.textContent = '확인 중…'; pwMsg.className = 'msg';
+    call('GET').then(function(d){
+      pwGo.disabled = false;
+      if(d && d.ok){
+        gate.style.display = 'none';
+        main.style.display = 'block';
+        renderList(d.users);
+      } else {
+        pw = null;
+        pwMsg.textContent = errText(d && d.error);
+        pwMsg.className = 'msg bad';
+      }
+    });
+  }
+  pwGo.addEventListener('click', tryPw);
+  pwInput.addEventListener('keydown', function(e){ if(e.key === 'Enter') tryPw(); });
+
+  document.getElementById('addGo').addEventListener('click', function(){
+    var email = document.getElementById('newEmail').value.trim();
+    var years = parseFloat(document.getElementById('newYears').value) || 1;
+    if(!email){ addMsg.textContent = '이메일을 입력해 주세요.'; addMsg.className = 'msg bad'; return; }
+    addMsg.textContent = '등록 중…'; addMsg.className = 'msg';
+    call('POST', {email:email, years:years}).then(function(d){
+      if(d && d.ok){
+        addMsg.textContent = esc(email) + ' 등록 완료';
+        addMsg.className = 'msg ok';
+        document.getElementById('newEmail').value = '';
+        renderList(d.users);
+      } else {
+        addMsg.textContent = errText(d && d.error);
+        addMsg.className = 'msg bad';
+      }
+    });
+  });
+
+  listWrap.addEventListener('click', function(e){
+    var b = e.target.closest ? e.target.closest('[data-del]') : null;
+    if(!b) return;
+    var email = b.getAttribute('data-del');
+    if(!confirm(email + ' 을(를) 명단에서 빼시겠습니까?')) return;
+    b.disabled = true;
+    call('DELETE', {email:email}).then(function(d){
+      if(d && d.ok) renderList(d.users);
+      else { alert(errText(d && d.error)); b.disabled = false; }
+    });
+  });
+})();
+</script>
+</body>
+</html>

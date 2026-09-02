@@ -1,7 +1,8 @@
 // 카카오 로컬 API 프록시
 // 브라우저는 이 함수만 호출하고, 카카오 키는 서버 환경변수에만 둔다.
-// 방문자는 각자 키를 준비할 필요 없이 이 함수를 통해 주소를 검색한다.
-// 필요한 환경변수: KAKAO_REST_KEY
+// 등록된 이용자만 호출한다. 필요한 환경변수: KAKAO_REST_KEY
+
+import { requireUser } from './_auth.js';
 
 // 한 사람이 지나치게 많이 부르는 것을 막아 카카오 할당량을 지킨다.
 // 함수 인스턴스마다 따로 세므로 정확한 총량 제한은 아니고, 대량 호출을 늦추는 용도다.
@@ -27,6 +28,9 @@ function tooMany(ip) {
 }
 
 export default async function handler(req, res) {
+  const user = await requireUser(req, res);
+  if (!user) return; // requireUser 가 이미 401/503 응답을 보냈다
+
   const key = process.env.KAKAO_REST_KEY;
   if (!key) {
     return res.status(500).json({ error: 'no_key', message: 'KAKAO_REST_KEY 환경변수가 없습니다.' });

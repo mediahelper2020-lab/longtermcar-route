@@ -23,6 +23,25 @@ body{margin:0;background:var(--bg);color:var(--ink);
   font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,system-ui,"Malgun Gothic",sans-serif;
   font-size:15px;line-height:1.55;-webkit-text-size-adjust:100%;word-break:keep-all}
 
+/* ----- 이용 신청(로그인) 가림막 ----- */
+.authgate{position:fixed;inset:0;z-index:9999;background:var(--bg);
+  display:flex;align-items:center;justify-content:center;padding:20px}
+.agcard{width:100%;max-width:360px;background:var(--panel);border-radius:16px;
+  box-shadow:0 8px 40px rgba(16,24,40,.16);padding:26px 24px 22px;text-align:center}
+.agcard h2{margin:12px 0 4px;font-size:19px;font-weight:800;letter-spacing:-.02em}
+.aglede{margin:0 0 18px;font-size:13px;color:var(--muted);line-height:1.5}
+.agmark{width:44px;height:44px;border-radius:12px;margin:0 auto;display:flex;
+  align-items:center;justify-content:center;box-shadow:0 2px 7px rgba(14,26,99,.30)}
+.agcard input{width:100%;padding:12px 13px;border:1.5px solid var(--line-2);border-radius:10px;
+  font:inherit;font-size:14.5px;text-align:center}
+.agcard input:focus{outline:none;border-color:var(--brand)}
+.agcard button{width:100%;margin-top:9px;padding:12px 0;border:0;border-radius:10px;
+  background:var(--brand);color:#fff;font:inherit;font-size:14.5px;font-weight:800;cursor:pointer}
+.agcard button:hover{background:var(--brand-dk)}
+.agcard button:disabled{opacity:.55;cursor:default}
+.agmsg{min-height:18px;margin:11px 0 0;font-size:12.5px;color:var(--muted)}
+.agmsg.bad{color:var(--bad);font-weight:700}
+
 /* ----- 큰 틀: 왼쪽 패널 + 지도 ----- */
 .app{display:flex;height:100dvh;min-height:100vh}
 .panel{flex:0 0 412px;width:412px;background:var(--panel);display:flex;flex-direction:column;
@@ -298,6 +317,28 @@ select{font:inherit;padding:9px 10px;border:1px solid var(--line-2);border-radiu
 </style>
 </head>
 <body>
+
+<div class="authgate" id="authGate">
+  <div class="agcard">
+    <div class="agmark" aria-hidden="true">
+      <svg viewBox="0 0 64 64" width="26" height="26">
+        <rect width="64" height="64" rx="13" fill="#0e1a63"/>
+        <circle cx="32" cy="15.5" r="8.8" fill="#d9edf8"/>
+        <path d="M5.5 27.5c0-1.3.9-1.9 2.1-1.7 9.4 1.4 17.9 4.6 22.9 8.8v22.9c-5-4.2-13.5-7.3-22.9-8.7
+                 -1.2-.2-2.1-.9-2.1-2.2z" fill="#d9edf8"/>
+        <path d="M58.5 27.5c0-1.3-.9-1.9-2.1-1.7-9.4 1.4-17.9 4.6-22.9 8.8v22.9c5-4.2 13.5-7.3 22.9-8.7
+                 1.2-.2 2.1-.9 2.1-2.2z" fill="#d9edf8"/>
+        <rect x="25.6" y="31.5" width="4.6" height="28.5" rx="2.3" fill="#d9edf8"/>
+        <rect x="33.8" y="31.5" width="4.6" height="28.5" rx="2.3" fill="#d9edf8"/>
+      </svg>
+    </div>
+    <h2>송영MAP 이용 신청</h2>
+    <p class="aglede">관리자가 등록한 이메일만 이용할 수 있습니다.<br>기관에 등록한 이메일을 입력해 주세요.</p>
+    <input type="email" id="agEmail" placeholder="이메일 주소" autocomplete="email" inputmode="email" disabled>
+    <button type="button" id="agGo" disabled>확인</button>
+    <p class="agmsg" id="agMsg">이용 여부를 확인하는 중입니다…</p>
+  </div>
+</div>
 
 <div class="app">
   <aside class="panel">
@@ -2357,51 +2398,112 @@ function checkProvider(){
 }
 
 var mapLine = document.getElementById('mapline');
-MV.start().then(function(kind){
-  mapLine.className = kind ? 'srcline ok' : 'srcline';
-  mapLine.textContent =
-      kind === 'kakao' ? '카카오맵 사용 중' :
-      kind === 'osm'   ? ('OpenStreetMap 지도 사용 중 · ' + (MV.why() === 'failed'
-                            ? ('카카오맵을 불러오지 못했습니다 (지금 쓰는 키 ' +
-                               String(MV.usedKey() || '').slice(-6) +
-                               ' · 이 키가 살아 있는지, 도메인이 등록됐는지 확인해 주세요)')
-                            : '카카오맵 키가 설정되지 않았습니다')) :
-                         '지도를 표시하지 못했습니다';
-  drawPreview();
-});
 
-migrateV1();
-loadState();
-modeArrivalBtn.classList.toggle('on', mode === 'arrival');
-modeDepartureBtn.classList.toggle('on', mode === 'departure');
-document.getElementById('startTime').value = todayMeta[mode].start;
-fillCarOptions(rCarSel);
-syncCounts();
-
-// 어르신 주소록은 IndexedDB 에서 비동기로 불러온다. 불러오는 동안에도
-// 센터 입력 등 나머지 화면은 바로 쓸 수 있어야 한다.
-idbAll().then(function(list){
-  roster = list;
-  renderRosterList();
-  renderTodayList();
-  syncCounts();
-  drawPreview();
-});
-
-// 저장된 센터 주소가 있으면 시작하자마자 지도에 찍어 준다.
-// 다시 들어왔을 때 빈 지도가 아니라 우리 센터가 먼저 보이게 하려는 것이다.
-checkProvider().then(function(){
-  var ca = centerAddrI.value.trim();
-  if(!ca || centerHit) return;
-  return locate(ca).then(function(hit){
-    if(!hit) return;
-    centerHit = hit;
-    setPin(centerPin, hit);
-    bias = {lat:hit.lat, lng:hit.lng};
+/* 인증이 확인된 뒤에만 지도·주소 검색 등 실제 앱을 켠다.
+   그 전에는 함수/이벤트만 준비해 두고 아무 것도 부르지 않는다. */
+function boot(){
+  MV.start().then(function(kind){
+    mapLine.className = kind ? 'srcline ok' : 'srcline';
+    mapLine.textContent =
+        kind === 'kakao' ? '카카오맵 사용 중' :
+        kind === 'osm'   ? ('OpenStreetMap 지도 사용 중 · ' + (MV.why() === 'failed'
+                              ? ('카카오맵을 불러오지 못했습니다 (지금 쓰는 키 ' +
+                                 String(MV.usedKey() || '').slice(-6) +
+                                 ' · 이 키가 살아 있는지, 도메인이 등록됐는지 확인해 주세요)')
+                              : '카카오맵 키가 설정되지 않았습니다')) :
+                           '지도를 표시하지 못했습니다';
     drawPreview();
   });
+
+  migrateV1();
+  loadState();
+  modeArrivalBtn.classList.toggle('on', mode === 'arrival');
+  modeDepartureBtn.classList.toggle('on', mode === 'departure');
+  document.getElementById('startTime').value = todayMeta[mode].start;
+  fillCarOptions(rCarSel);
+  syncCounts();
+
+  // 어르신 주소록은 IndexedDB 에서 비동기로 불러온다. 불러오는 동안에도
+  // 센터 입력 등 나머지 화면은 바로 쓸 수 있어야 한다.
+  idbAll().then(function(list){
+    roster = list;
+    renderRosterList();
+    renderTodayList();
+    syncCounts();
+    drawPreview();
+  });
+
+  // 저장된 센터 주소가 있으면 시작하자마자 지도에 찍어 준다.
+  // 다시 들어왔을 때 빈 지도가 아니라 우리 센터가 먼저 보이게 하려는 것이다.
+  checkProvider().then(function(){
+    var ca = centerAddrI.value.trim();
+    if(!ca || centerHit) return;
+    return locate(ca).then(function(hit){
+      if(!hit) return;
+      centerHit = hit;
+      setPin(centerPin, hit);
+      bias = {lat:hit.lat, lng:hit.lng};
+      drawPreview();
+    });
+  });
+  window.addEventListener('resize', function(){ MV.refresh(); });
+}
+
+/* ================= 이용 신청(로그인 가림막) =================
+   관리자가 등록한 이메일만 쓸 수 있게 한다. 등록 여부·만료일은
+   서버(카카오 키와 마찬가지로 브라우저에 내려가지 않는 값)가 확인하고,
+   확인되면 서명된 쿠키로 다음 방문부터는 다시 입력하지 않아도 되게 한다. */
+var authGate = document.getElementById('authGate');
+var agEmail = document.getElementById('agEmail');
+var agGo = document.getElementById('agGo');
+var agMsg = document.getElementById('agMsg');
+
+function unlock(){
+  authGate.style.display = 'none';
+  boot();
+}
+
+function agSay(t, bad){
+  agMsg.textContent = t;
+  agMsg.className = 'agmsg' + (bad ? ' bad' : '');
+}
+
+function authErrorText(code){
+  return code === 'not_registered' ? '등록되지 않은 이메일입니다. 관리자에게 문의해 주세요.'
+       : code === 'expired'        ? '이용 기간이 만료됐습니다. 관리자에게 문의해 주세요.'
+       : code === 'bad_email'      ? '이메일 형식을 확인해 주세요.'
+       :                              '확인하지 못했습니다. 잠시 후 다시 시도해 주세요.';
+}
+
+function tryLogin(){
+  var email = agEmail.value.trim();
+  if(!email){ agSay('이메일을 입력해 주세요.', true); return; }
+  agGo.disabled = true;
+  agSay('확인 중…');
+  fetch('/api/auth', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({email:email}), signal: timeout(9000)
+  }).then(function(r){ return r.json(); }).then(function(d){
+    agGo.disabled = false;
+    if(d && d.ok) unlock();
+    else agSay(authErrorText(d && d.error), true);
+  }).catch(function(){
+    agGo.disabled = false;
+    agSay('연결에 문제가 생겼습니다. 잠시 후 다시 시도해 주세요.', true);
+  });
+}
+agGo.addEventListener('click', tryLogin);
+agEmail.addEventListener('keydown', function(e){ if(e.key === 'Enter') tryLogin(); });
+
+fetch('/api/auth', {signal: timeout(9000)}).then(function(r){ return r.json(); }).then(function(d){
+  if(d && d.ok){ unlock(); return; }
+  agEmail.disabled = false; agGo.disabled = false;
+  agSay('');
+  agEmail.focus();
+}).catch(function(){
+  agEmail.disabled = false; agGo.disabled = false;
+  agSay('이용 여부를 확인하지 못했습니다. 이메일을 입력해 다시 시도해 주세요.', true);
 });
-window.addEventListener('resize', function(){ MV.refresh(); });
 })();
 </script>
 </body>

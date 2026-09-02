@@ -9,8 +9,17 @@
 //
 // 이 환경변수가 없으면 index.html 에 적어 둔 기본 키를 쓴다. 즉 이 창구는
 // 코드를 고치지 않고 키를 바꾸고 싶을 때를 위한 것이다.
+//
+// 이 키 자체는 브라우저에 드러나도 되는 값이지만(지도 SDK 를 직접 부르니
+// 어차피 소스에 보인다), 등록된 이용자만 지도를 켤 수 있도록 여기서도
+// 같은 검사를 한다.
+
+import { requireUser } from './_auth.js';
 
 export default async function handler(req, res) {
+  const user = await requireUser(req, res);
+  if (!user) return;
+
   const key = process.env.KAKAO_JS_KEY || '';
   res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=86400');
   return res.status(200).json({ key: key || null });
