@@ -148,6 +148,10 @@ input:focus,textarea:focus{outline:none;border-color:var(--brand);background:#ff
 .legend div+div{margin-top:4px}
 .legend i{width:11px;height:11px;border-radius:50%;flex:none}
 .leaflet-container{font-family:inherit}
+.mapoff{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:5px;padding:24px;text-align:center;color:var(--muted);
+  font-size:13px;word-break:keep-all}
+.mapoff b{display:block;font-size:15px;color:var(--ink)}
 
 /* ----- 좁은 화면: 지도를 위로 ----- */
 @media (max-width:900px){
@@ -162,17 +166,25 @@ input:focus,textarea:focus{outline:none;border-color:var(--brand);background:#ff
 
 /* ----- 인쇄 ----- */
 @media print{
-  .mapwrap,.tabs,.pfoot,.srcline,.noprint,.more,.rowbtns{display:none!important}
+  .mapwrap,.tabs,.pfoot,.srcline,.noprint,.more,.rowbtns,.brand{display:none!important}
   .app{display:block;height:auto}
   .panel{width:auto;flex:none;box-shadow:none}
   .pbody{overflow:visible;padding:0}
   .pane{display:none!important}
   #paneResult{display:block!important}
-  .printhead{display:block;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid var(--ink)}
+  body{background:#fff}
+  .printhead{display:block;margin-bottom:15px;padding-bottom:9px;border-bottom:2px solid var(--ink)}
   .printhead h2{margin:0;font-size:19px}
   .printhead p{margin:3px 0 0;font-size:12px;color:var(--muted)}
-  .stop{page-break-inside:avoid}
-  body{background:#fff}
+  /* 종이에서는 요약을 왼쪽에 모아 붙인다 */
+  .summary{display:flex;gap:0;margin-bottom:16px;border:1px solid var(--line);width:max-content}
+  .summary div{background:none;border-radius:0;text-align:left;padding:7px 18px}
+  .summary div+div{border-left:1px solid var(--line)}
+  /* 한 줄이 종이 폭만큼 늘어나면 이름과 시각이 멀어져 읽기 어렵다 */
+  .route,.note{max-width:150mm}
+  .who{justify-content:flex-start;gap:12px}
+  .stop{page-break-inside:avoid;padding:2px 0}
+  .stop:hover{background:none}
 }
 </style>
 </head>
@@ -433,8 +445,24 @@ function esc(s){
 var mapObj = null, routeLayer = null, markers = [], routeShown = false;
 var mapTop = document.getElementById('maptop');
 
+var mapOff = false;
+
 function ensureMap(){
-  if(mapObj || typeof L === 'undefined') return mapObj;
+  if(mapObj) return mapObj;
+  if(typeof L === 'undefined'){
+    // 기관 방화벽 등으로 지도 라이브러리를 못 받아오는 경우가 있다.
+    // 지도는 포기하더라도 순서 계산과 인쇄는 그대로 쓸 수 있게 안내만 남긴다.
+    if(!mapOff){
+      mapOff = true;
+      document.getElementById('map').innerHTML =
+        '<div class="mapoff"><b>지도를 불러오지 못했습니다</b>' +
+        '인터넷 연결이나 기관 방화벽 때문일 수 있습니다. ' +
+        '지도가 없어도 방문 순서 계산과 인쇄는 그대로 됩니다.</div>';
+      var lg = document.querySelector('.legend');
+      if(lg) lg.style.display = 'none';
+    }
+    return null;
+  }
   mapObj = L.map('map', {zoomControl:false}).setView([36.5, 127.8], 7);
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
