@@ -126,6 +126,11 @@ input:focus,textarea:focus{outline:none;border-color:var(--brand);
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 .grid2 label{display:block;font-size:11.5px;color:var(--muted);margin-bottom:4px;font-weight:600}
 .tiny{font-size:11.5px;color:var(--muted);margin:9px 0 0;line-height:1.5}
+.chk{display:flex;align-items:center;gap:8px;margin-top:11px;padding:9px 11px;cursor:pointer;
+  background:var(--panel-2);border:1px solid var(--line);border-radius:9px;
+  font-size:13px;font-weight:600;color:var(--ink-2)}
+.chk input{width:16px;height:16px;margin:0;accent-color:var(--brand);cursor:pointer}
+.chk:hover{border-color:var(--brand)}
 
 /* ----- 아래 고정 버튼 ----- */
 .pfoot{border-top:1px solid var(--line);padding:12px 16px;background:#fff;
@@ -192,6 +197,9 @@ input:focus,textarea:focus{outline:none;border-color:var(--brand);
 .madeby a:hover{color:var(--brand);text-decoration:underline}
 .note{font-size:11.5px;color:var(--muted);margin:14px 0 0;padding-top:12px;
   border-top:1px solid var(--line);word-break:keep-all}
+.note.road{border-top:0;padding:10px 12px;margin-top:13px;border-radius:10px;
+  background:var(--brand-soft);color:var(--brand-dk);line-height:1.6}
+.note.road b{font-weight:800}
 .alert{background:#fef3f2;border:1px solid #fecdca;border-radius:10px;padding:12px;font-size:13px;color:#912018}
 .alert b{display:block;margin-bottom:4px}
 .alert ul{margin:7px 0 0;padding-left:17px}
@@ -364,6 +372,10 @@ input:focus,textarea:focus{outline:none;border-color:var(--brand);
               </div>
             </div>
             <p class="tiny">보정 계수는 직선거리를 실제 도로 거리에 가깝게 맞추는 값입니다. 도심 1.3, 외곽 1.2 정도가 무난합니다.</p>
+            <label class="chk"><input type="checkbox" id="traffic" checked>
+              <span>출발 시각의 도로 사정 반영</span></label>
+            <p class="tiny">출퇴근 시간대에는 속도를 낮춰 계산합니다. 평균 속도는 길이 원활할 때 기준으로 적어 주세요.
+              통상적인 도심 기준값이라 지역에 따라 다를 수 있습니다.</p>
           </div>
         </details>
       </div>
@@ -833,7 +845,8 @@ function saveState(){
       sm:document.getElementById('stopMin').value,
       fc:document.getElementById('factor').value,
       cr:document.getElementById('cars').value,
-      se:document.getElementById('seats').value
+      se:document.getElementById('seats').value,
+      tf:document.getElementById('traffic').checked ? 1 : 0
     }));
   }catch(e){ /* 저장이 막힌 브라우저에서도 앱은 그대로 동작한다 */ }
 }
@@ -850,6 +863,7 @@ function loadState(){
   if(s.fc) document.getElementById('factor').value = s.fc;
   if(s.cr) document.getElementById('cars').value = s.cr;
   if(s.se) document.getElementById('seats').value = s.se;
+  if(s.tf !== undefined) document.getElementById('traffic').checked = !!s.tf;
   peopleEl.innerHTML = '';
   s.rows.forEach(function(r){ addRow(r.n || '', r.a || ''); });
   return true;
@@ -1083,14 +1097,61 @@ function naviUrl(a, b, an, bn){
 
 /* 어르신별로 차에 앉아 계시는 시간(분). 태운 순서대로 돌려준다. */
 function rideMinutes(D, order, opt){
-  var t = 0, arrive = [];
+  if(!order.length) return [];
+  var clock = opt.start, t = 0, arrive = [];
   for(var k=0;k<order.length;k++){
-    t += D[k === 0 ? 0 : order[k-1]][order[k]] / opt.speed * 60;
+    var m = D[k === 0 ? 0 : order[k-1]][order[k]] / speedAt(clock, opt) * 60;
+    t += m; clock = tick(clock, m);
     arrive.push(t);
+    clock = tick(clock, opt.stopMin);
     t += opt.stopMin;
   }
-  var atCenter = t - opt.stopMin + D[order[order.length-1]][0] / opt.speed * 60;
+  var atCenter = t - opt.stopMin + D[order[order.length-1]][0] / speedAt(clock, opt) * 60;
   return arrive.map(function(a){ return atCenter - a; });
+}
+
+/* ----- 시간대별 도로 사정 -----
+   송영은 매일 같은 시각에 나가므로, 그 시간대에 길이 어떤지가
+   실제 소요 시간을 좌우한다. 1.0 이 평소이고 작을수록 막힌다.
+   실측이 아니라 통상적인 도심 기준값이라, 지역에 따라 다를 수 있다. */
+var TRAFFIC = [
+  {from: 7*60,      to: 9*60,       k:0.72, name:'출근 정체'},
+  {from: 9*60,      to: 12*60,      k:1.00, name:'오전'},
+  {from: 12*60,     to: 13*60 + 30, k:0.88, name:'점심'},
+  {from: 13*60 + 30, to: 17*60,     k:1.00, name:'오후'},
+  {from: 17*60,     to: 19*60,      k:0.68, name:'퇴근 정체'},
+  {from: 19*60,     to: 22*60,      k:1.05, name:'저녁'}
+];
+
+function trafficAt(min){
+  if(min === null || min === undefined) return {k:1, name:''};
+  var m = ((min % 1440) + 1440) % 1440;
+  for(var i=0;i<TRAFFIC.length;i++){
+    if(m >= TRAFFIC[i].from && m < TRAFFIC[i].to) return TRAFFIC[i];
+  }
+  return {k:1.15, name:'한산한 시간'};
+}
+
+/* 그 시각에 실제로 낼 수 있는 속도 */
+function speedAt(clock, opt){
+  if(!opt.traffic || clock === null) return opt.speed;
+  return opt.speed * trafficAt(clock).k;
+}
+
+function tick(clock, min){
+  return clock === null ? null : clock + min;
+}
+
+/* 한 차량이 도는 데 걸리는 시간(분). 구간마다 그때 시각의 도로 사정을 쓴다. */
+function carTime(D, order, opt){
+  if(!order.length) return 0;
+  var clock = opt.start, t = 0;
+  for(var k=0;k<order.length;k++){
+    var m = D[k === 0 ? 0 : order[k-1]][order[k]] / speedAt(clock, opt) * 60;
+    t += m + opt.stopMin;
+    clock = tick(tick(clock, m), opt.stopMin);
+  }
+  return t + D[order[order.length-1]][0] / speedAt(clock, opt) * 60;
 }
 
 function heuristic(D,N){
@@ -1166,8 +1227,11 @@ function rideFor(D, idx){
   return {order: r.order.map(function(k){ return idx[k-1]; }), exact:n <= 14};
 }
 
+/* 배정을 고르는 동안 쓰는 어림값. 순서가 아직 없으므로 출발 시각의
+   도로 사정 하나로만 잡는다. 순서가 정해진 뒤에는 carTime 으로 다시 잰다. */
 function carMinutes(dist, count, opt){
-  return dist / opt.speed * 60 + opt.stopMin * count;
+  var v = opt.traffic ? opt.speed * trafficAt(opt.start).k : opt.speed;
+  return dist / v * 60 + opt.stopMin * count;
 }
 
 /* ----- 추천 경로 만들기 -----
@@ -1179,9 +1243,9 @@ function planStats(D, cars, rows, opt){
   cars.forEach(function(c){
     total += c.dist;
     n += c.order.length;
-    var m = carMinutes(c.dist, c.order.length, opt);
-    if(m > longest) longest = m;
     if(!c.order.length) return;
+    var m = carTime(D, c.order, opt);   // 순서가 정해졌으니 구간별 도로 사정으로 잰다
+    if(m > longest) longest = m;
     rideMinutes(D, c.order, opt).forEach(function(r, k){
       rideSum += r;
       if(r > rideMax){ rideMax = r; who = rows[c.order[k]-1].name; }
@@ -1378,9 +1442,9 @@ function show(html){
 
 var curPlans = null, curCtx = null, curPick = 0;
 
-function render(center, people, plans, opt){
+function render(center, people, plans, opt, D){
   curPlans = plans;
-  curCtx = {center:center, people:people, opt:opt};
+  curCtx = {center:center, people:people, opt:opt, D:D};
   curPick = 0;
   showPlan(0);
 }
@@ -1397,7 +1461,7 @@ function showPlan(pick){
 
   var longest = 0, lastBack = null;
   cars.forEach(function(c){
-    var m = carMinutes(c.dist, c.order.length, opt);
+    var m = c.order.length ? carTime(curCtx.D, c.order, opt) : 0;
     if(m > longest) longest = m;
     if(opt.start !== null){
       var back = opt.start + m;
@@ -1435,7 +1499,7 @@ function showPlan(pick){
   cars.forEach(function(car, ci){
     var color = CAR_COLORS[ci % CAR_COLORS.length];
     var carDist = car.dist;
-    var carMin = carMinutes(carDist, car.order.length, opt);
+    var carMin = car.order.length ? carTime(curCtx.D, car.order, opt) : 0;
 
     if(multi){
       h += '<div class="carhead' + (ci === 0 ? ' first' : '') + '">' +
@@ -1473,7 +1537,8 @@ function showPlan(pick){
 
       if(i < seq.length - 1){
         var d = haversine(pts[i], pts[i+1]) * opt.factor;
-        var legMin = d / opt.speed * 60;
+        // 그 구간을 실제로 달리는 시각의 도로 사정으로 잰다
+        var legMin = d / speedAt(clock, opt) * 60;
         if(clock !== null) clock += legMin + (i > 0 ? opt.stopMin : 0);
         h += '<li class="leg"><div class="mark"><div class="rail"></div></div>' +
              '<div class="txt"><span>' + d.toFixed(1) + 'km · 약 ' + Math.round(legMin) + '분</span>' +
@@ -1488,6 +1553,17 @@ function showPlan(pick){
 
   h += '<div class="rowbtns noprint"><button type="button" class="chip" id="printBtn">인쇄</button>' +
        '<button type="button" class="chip quiet" id="copyBtn">순서 복사</button></div>';
+  if(opt.traffic && opt.start !== null){
+    var band = trafficAt(opt.start);
+    h += '<p class="note road">' + fmtTime(opt.start) + ' 출발은 <b>' + band.name + '</b> 시간대입니다. ' +
+         (band.k < 0.999
+           ? '평균 속도를 ' + opt.speed + '에서 ' + (opt.speed * band.k).toFixed(1) + 'km/h 로 낮춰 잡았습니다.'
+           : band.k > 1.001
+             ? '길이 한산해 평균 속도를 ' + (opt.speed * band.k).toFixed(1) + 'km/h 로 잡았습니다.'
+             : '적어 주신 평균 속도를 그대로 썼습니다.') +
+         ' 운행 중 시간이 흐르면 그 시각에 맞춰 구간마다 다시 잽니다.</p>';
+  }
+
   h += '<p class="note">주소는 ' + (kakaoOk ? '카카오 지도' : '공개 지도 데이터') + '에서 찾았습니다. ' +
        '거리는 두 지점의 직선거리에 보정 계수 ' + opt.factor +
        '를 곱한 추정값입니다. 실제 도로와 교통 상황은 반영되지 않으니 순서를 잡는 참고 자료로 쓰시고, 최종 판단은 운행 담당자가 해 주세요.' +
@@ -1562,6 +1638,7 @@ document.getElementById('centerName').addEventListener('input', queueSave);
 ['startTime','speed','stopMin','factor','cars','seats'].forEach(function(id){
   document.getElementById(id).addEventListener('input', queueSave);
 });
+document.getElementById('traffic').addEventListener('change', queueSave);
 
 calcBtn.addEventListener('click', function(){
   var centerName = document.getElementById('centerName').value.trim();
@@ -1590,7 +1667,8 @@ calcBtn.addEventListener('click', function(){
     factor: parseFloat(document.getElementById('factor').value) || 1.3,
     start: parseTime(document.getElementById('startTime').value),
     cars: Math.min(Math.max(parseInt(document.getElementById('cars').value, 10) || 1, 1), 4),
-    seats: Math.min(Math.max(parseInt(document.getElementById('seats').value, 10) || 9, 1), 20)
+    seats: Math.min(Math.max(parseInt(document.getElementById('seats').value, 10) || 9, 1), 20),
+    traffic: document.getElementById('traffic').checked
   };
 
   saveState();
@@ -1656,7 +1734,7 @@ calcBtn.addEventListener('click', function(){
     });
 
     render({name:centerName, addr:centerAddr, hit:centerHit}, rows,
-           buildPlans(D, groups, rows, opt), opt);
+           buildPlans(D, groups, rows, opt), opt, D);
   }).catch(function(){
     calcBtn.disabled = false;
     statusEl.textContent = '';
