@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>송영 경로 만들기</title>
-<meta name="description" content="주야간보호센터 송영 최적경로를 지도 위에서 계산합니다.">
+<title>송영MAP</title>
+<meta name="description" content="주간보호센터 스마트 송영경로 설계하는 웹사이트">
 <meta name="theme-color" content="#0e1a63">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='13' fill='%230e1a63'/%3E%3Ccircle cx='32' cy='15.5' r='8.8' fill='%23d9edf8'/%3E%3Cpath d='M5.5 27.5c0-1.3.9-1.9 2.1-1.7 9.4 1.4 17.9 4.6 22.9 8.8v22.9c-5-4.2-13.5-7.3-22.9-8.7-1.2-.2-2.1-.9-2.1-2.2z' fill='%23d9edf8'/%3E%3Cpath d='M58.5 27.5c0-1.3-.9-1.9-2.1-1.7-9.4 1.4-17.9 4.6-22.9 8.8v22.9c5-4.2 13.5-7.3 22.9-8.7 1.2-.2 2.1-.9 2.1-2.2z' fill='%23d9edf8'/%3E%3Crect x='25.6' y='31.5' width='4.6' height='28.5' rx='2.3' fill='%23d9edf8'/%3E%3Crect x='33.8' y='31.5' width='4.6' height='28.5' rx='2.3' fill='%23d9edf8'/%3E%3C/svg%3E">
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
@@ -140,6 +140,20 @@ input:focus,textarea:focus{outline:none;border-color:var(--brand);
 
 /* ----- 결과 ----- */
 #paneResult{background:#fff;border:1px solid var(--line);border-radius:13px;padding:14px 15px}
+.plans{display:grid;gap:6px;margin-bottom:10px}
+.plan{display:grid;grid-template-columns:auto 1fr;gap:2px 9px;text-align:left;cursor:pointer;
+  border:1px solid var(--line-2);background:#fff;border-radius:11px;padding:9px 11px;font:inherit}
+.plan:hover{border-color:var(--brand)}
+.plan.on{border-color:var(--brand);background:var(--brand-soft);
+  box-shadow:0 0 0 1px var(--brand) inset}
+.pl-n{grid-row:1/3;align-self:center;font-size:10.5px;font-weight:800;color:#fff;
+  background:var(--line-2);border-radius:7px;padding:4px 7px;white-space:nowrap}
+.plan.on .pl-n{background:var(--brand)}
+.pl-t{font-size:13.5px;font-weight:800;color:var(--ink);letter-spacing:-.01em}
+.pl-m{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.plan.on .pl-m{color:var(--brand-dk)}
+.why{margin:0 0 13px;padding:10px 12px;background:var(--panel-2);border-radius:10px;
+  font-size:12px;line-height:1.6;color:var(--ink-2)}
 .summary{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:14px}
 .summary div{background:var(--panel-2);border-radius:10px;padding:9px 10px;text-align:center}
 .summary span{display:block;font-size:11px;color:var(--muted)}
@@ -252,8 +266,8 @@ input:focus,textarea:focus{outline:none;border-color:var(--brand);
         </svg>
       </div>
       <div>
-        <h1>송영 경로 만들기</h1>
-        <p class="lede">센터와 어르신 주소만 적으면 가장 짧은 방문 순서를 찾아 드립니다.</p>
+        <h1>송영MAP</h1>
+        <p class="lede">주간보호센터 스마트 송영경로 설계하는 웹사이트</p>
       </div>
     </div>
     <div class="chips">
@@ -997,6 +1011,64 @@ function heldKarp(D,N){
   order.reverse();
   return {order:order, dist:best, exact:true};
 }
+/* 어르신이 차에 앉아 계시는 시간의 합을 가장 짧게 만드는 순서.
+   한 구간을 달릴 때 이미 타신 분들이 모두 그 시간을 함께 보내므로,
+   구간 거리에 그때까지 태운 인원수를 곱해 더하면 그 합이 된다.
+   센터에서 첫 집까지는 빈 차라 0 이고, 마지막 구간은 전원이 타고 있다.
+   그래서 최단거리 경로와 다른 순서가 나올 수 있다. */
+function heldKarpRide(D,N){
+  var full = 1 << N;
+  var dp = new Float64Array(full*N), par = new Int8Array(full*N);
+  dp.fill(Infinity); par.fill(-1);
+  for(var i=0;i<N;i++) dp[(1<<i)*N + i] = 0;
+
+  var bits = new Int8Array(full);
+  for(var m=1;m<full;m++) bits[m] = bits[m >> 1] + (m & 1);
+
+  for(var mask=1;mask<full;mask++){
+    var onboard = bits[mask];
+    for(var a=0;a<N;a++){
+      if(!(mask & (1<<a))) continue;
+      var cur = dp[mask*N + a];
+      if(!isFinite(cur)) continue;
+      for(var b=0;b<N;b++){
+        if(mask & (1<<b)) continue;
+        var nm = mask | (1<<b), nc = cur + onboard * D[a+1][b+1];
+        if(nc < dp[nm*N + b]){ dp[nm*N + b] = nc; par[nm*N + b] = a; }
+      }
+    }
+  }
+  var best = Infinity, last = -1;
+  for(var k=0;k<N;k++){
+    var c = dp[(full-1)*N + k] + N * D[k+1][0];
+    if(c < best){ best = c; last = k; }
+  }
+  var order = [], mm = full-1, cur2 = last;
+  while(cur2 !== -1){ order.push(cur2 + 1); var p = par[mm*N + cur2]; mm ^= (1 << cur2); cur2 = p; }
+  order.reverse();
+  return {order:order, exact:true};
+}
+
+/* 방문 순서가 정해졌을 때 실제 주행거리 */
+function tourDist(D, order){
+  if(!order.length) return 0;
+  var s = D[0][order[0]];
+  for(var k=0;k<order.length-1;k++) s += D[order[k]][order[k+1]];
+  return s + D[order[order.length-1]][0];
+}
+
+/* 어르신별로 차에 앉아 계시는 시간(분). 태운 순서대로 돌려준다. */
+function rideMinutes(D, order, opt){
+  var t = 0, arrive = [];
+  for(var k=0;k<order.length;k++){
+    t += D[k === 0 ? 0 : order[k-1]][order[k]] / opt.speed * 60;
+    arrive.push(t);
+    t += opt.stopMin;
+  }
+  var atCenter = t - opt.stopMin + D[order[order.length-1]][0] / opt.speed * 60;
+  return arrive.map(function(a){ return atCenter - a; });
+}
+
 function heuristic(D,N){
   var left = [], i;
   for(i=1;i<=N;i++) left.push(i);
@@ -1034,17 +1106,21 @@ var CAR_COLORS = ['#f4623a', '#2563eb', '#7c3aed', '#db2777'];
 
 /* 전체 거리표에서 한 차량이 맡은 사람만 뽑아 경로를 푼다.
    idx 는 원본 번호(1부터)이고, 돌려주는 order 도 원본 번호로 맞춰 준다. */
-function routeFor(D, idx, exactOk){
-  var n = idx.length, i, j;
-  if(!n) return {order:[], dist:0, exact:true};
-
-  var sub = [];
+function subMatrix(D, idx){
+  var n = idx.length, sub = [], i, j;
   for(i=0;i<=n;i++) sub.push(new Float64Array(n+1));
   for(i=0;i<=n;i++){
     for(j=0;j<=n;j++){
       sub[i][j] = D[i === 0 ? 0 : idx[i-1]][j === 0 ? 0 : idx[j-1]];
     }
   }
+  return sub;
+}
+
+function routeFor(D, idx, exactOk){
+  var n = idx.length;
+  if(!n) return {order:[], dist:0, exact:true};
+  var sub = subMatrix(D, idx);
 
   var r = n === 1 ? {order:[1], dist:sub[0][1] + sub[1][0], exact:true}
         : (exactOk && n <= 14) ? heldKarp(sub, n)
@@ -1057,8 +1133,90 @@ function routeFor(D, idx, exactOk){
   };
 }
 
+/* 탑승 시간을 기준으로 푼 순서 */
+function rideFor(D, idx){
+  var n = idx.length;
+  if(n <= 1) return {order:idx.slice(), exact:true};
+  var sub = subMatrix(D, idx);
+  var r = n <= 14 ? heldKarpRide(sub, n) : heuristic(sub, n);
+  return {order: r.order.map(function(k){ return idx[k-1]; }), exact:n <= 14};
+}
+
 function carMinutes(dist, count, opt){
   return dist / opt.speed * 60 + opt.stopMin * count;
+}
+
+/* ----- 추천 경로 만들기 -----
+   같은 배정이라도 도는 순서를 바꾸면 성격이 달라진다.
+   거리를 줄인 것, 어르신 탑승 시간을 줄인 것, 그리고 그대로 뒤집은 것.
+   뒤집은 경로는 거리가 완전히 같은 대신 먼저 타는 분과 나중에 타는 분이 바뀐다. */
+function planStats(D, cars, rows, opt){
+  var total = 0, longest = 0, rideSum = 0, rideMax = 0, who = '', n = 0;
+  cars.forEach(function(c){
+    total += c.dist;
+    n += c.order.length;
+    var m = carMinutes(c.dist, c.order.length, opt);
+    if(m > longest) longest = m;
+    if(!c.order.length) return;
+    rideMinutes(D, c.order, opt).forEach(function(r, k){
+      rideSum += r;
+      if(r > rideMax){ rideMax = r; who = rows[c.order[k]-1].name; }
+    });
+  });
+  return {total:total, longest:longest, rideSum:rideSum,
+          rideAvg:(n ? rideSum / n : 0), rideMax:rideMax, rideMaxWho:who};
+}
+
+function sameOrders(a, b){
+  if(a.length !== b.length) return false;
+  for(var i=0;i<a.length;i++) if(a[i].join(',') !== b[i].join(',')) return false;
+  return true;
+}
+
+function buildPlans(D, groups, rows, opt){
+  function pack(key, name, orders){
+    var cars = orders.map(function(o, i){
+      return {order:o, dist:tourDist(D, o), exact:groups[i].length <= 14};
+    });
+    return {key:key, name:name, orders:orders, cars:cars,
+            stats:planStats(D, cars, rows, opt)};
+  }
+
+  var shortO = groups.map(function(g){ return routeFor(D, g, true).order; });
+  var rideO  = groups.map(function(g){ return rideFor(D, g).order; });
+  var revO   = shortO.map(function(o){ return o.slice().reverse(); });
+
+  var plans = [pack('short', '최단 거리', shortO)];
+  if(!sameOrders(rideO, shortO)) plans.push(pack('ride', '탑승 시간 최소', rideO));
+  if(!plans.some(function(p){ return sameOrders(revO, p.orders); }))
+    plans.push(pack('reverse', '역순', revO));
+  return plans;
+}
+
+function planWhy(plan, base, opt){
+  var s = plan.stats, b = base.stats;
+
+  if(plan.key === 'short'){
+    return '총 주행거리가 가장 짧습니다. 기름값과 차량 부담이 가장 적어 평소 운행에 무난합니다.' +
+           (base === plan && plan.cars.length === 1 && s.rideMaxWho
+             ? ' ' + esc(s.rideMaxWho) + ' 어르신이 ' + Math.round(s.rideMax) + '분으로 가장 오래 타십니다.'
+             : '');
+  }
+
+  if(plan.key === 'ride'){
+    var moreKm = s.total - b.total;
+    var lessMin = b.rideAvg - s.rideAvg;
+    return '어르신들이 차에 앉아 계시는 시간의 합이 가장 짧습니다. ' +
+           (moreKm > 0.05 ? '주행거리는 ' + moreKm.toFixed(1) + 'km 더 길지만, ' : '') +
+           (lessMin > 0.5 ? '한 분당 평균 ' + Math.round(lessMin) + '분씩 덜 타십니다. ' : '') +
+           '거동이 불편하시거나 멀미가 있는 분이 계실 때 좋습니다.';
+  }
+
+  return '1번과 똑같은 길을 반대 방향으로 돕니다. 그래서 주행거리와 총 소요 시간이 완전히 같습니다. ' +
+         '바뀌는 것은 태우는 순서뿐입니다. 가장 오래 타시는 분이 ' +
+         esc(b.rideMaxWho) + '(' + Math.round(b.rideMax) + '분)에서 ' +
+         esc(s.rideMaxWho) + '(' + Math.round(s.rideMax) + '분)으로 바뀝니다. ' +
+         '특정 어르신을 일찍 모셔야 하거나, 반대로 오래 태우지 않아야 할 때 쓰세요.';
 }
 
 /* 배정이 얼마나 좋은지 재는 값. 가장 늦게 끝나는 차가 먼저고, 그다음이 총합. */
@@ -1194,7 +1352,20 @@ function show(html){
   setTab('result');
 }
 
-function render(center, people, cars, opt){
+var curPlans = null, curCtx = null, curPick = 0;
+
+function render(center, people, plans, opt){
+  curPlans = plans;
+  curCtx = {center:center, people:people, opt:opt};
+  curPick = 0;
+  showPlan(0);
+}
+
+function showPlan(pick){
+  curPick = pick;
+  var plans = curPlans, plan = plans[pick];
+  var center = curCtx.center, people = curCtx.people, opt = curCtx.opt;
+  var cars = plan.cars;
   var multi = cars.length > 1;
   var visited = cars.reduce(function(n, c){ return n + c.order.length; }, 0);
   var total = cars.reduce(function(d, c){ return d + c.dist; }, 0);
@@ -1210,7 +1381,22 @@ function render(center, people, cars, opt){
     }
   });
 
-  var h = '<div class="summary">' +
+  var h = '';
+
+  if(plans.length > 1){
+    h += '<div class="plans">';
+    plans.forEach(function(p, i){
+      h += '<button type="button" class="plan' + (i === pick ? ' on' : '') + '" data-p="' + i + '">' +
+           '<span class="pl-n">추천 ' + (i+1) + '</span>' +
+           '<span class="pl-t">' + p.name + '</span>' +
+           '<span class="pl-m">' + p.stats.total.toFixed(1) + 'km · 평균 탑승 ' +
+             Math.round(p.stats.rideAvg) + '분</span></button>';
+    });
+    h += '</div>';
+    h += '<p class="why">' + planWhy(plan, plans[0], opt) + '</p>';
+  }
+
+  h += '<div class="summary">' +
           '<div><span>방문</span><strong>' + visited + '명</strong></div>' +
           '<div><span>' + (multi ? '총 이동거리' : '이동거리') + '</span><strong>' +
             total.toFixed(1) + 'km</strong></div>' +
@@ -1319,6 +1505,12 @@ function render(center, people, cars, opt){
 
 /* 목록의 한 줄을 누르면 지도가 그 지점으로 움직인다 */
 bodyEl.addEventListener('click', function(e){
+  var pb = e.target.closest ? e.target.closest('.plan') : null;
+  if(pb){
+    var pi = +pb.getAttribute('data-p');
+    if(pi !== curPick) showPlan(pi);
+    return;
+  }
   var li = e.target.closest ? e.target.closest('.stop') : null;
   if(!li) return;
   MV.focus(+li.getAttribute('data-m'));
@@ -1429,14 +1621,15 @@ calcBtn.addEventListener('click', function(){
     }
 
     var groups = splitCars(D, N, opt.cars, opt.seats, pts, opt);
-    var cars = groups.map(function(g){ return routeFor(D, g, true); });
 
     // 오래 걸리는 차를 1호차로 올려 두면 인쇄물에서 보기 편하다
-    cars.sort(function(a, b){
-      return carMinutes(b.dist, b.order.length, opt) - carMinutes(a.dist, a.order.length, opt);
+    groups.sort(function(a, b){
+      return carMinutes(routeFor(D, b, false).dist, b.length, opt) -
+             carMinutes(routeFor(D, a, false).dist, a.length, opt);
     });
 
-    render({name:centerName, addr:centerAddr, hit:centerHit}, rows, cars, opt);
+    render({name:centerName, addr:centerAddr, hit:centerHit}, rows,
+           buildPlans(D, groups, rows, opt), opt);
   }).catch(function(){
     calcBtn.disabled = false;
     statusEl.textContent = '';
