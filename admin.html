@@ -114,13 +114,19 @@ th{color:var(--muted);font-weight:700;font-size:12px}
     }).then(function(r){ return r.json(); });
   }
 
-  function errText(code){
-    return code === 'bad_password'         ? '비밀번호가 틀렸습니다.'
-         : code === 'admin_not_configured' ? '서버에 ADMIN_PASSWORD 환경변수가 없습니다.'
-         : code === 'directory_unavailable'? '이용자 명단을 불러올 수 없습니다. Edge Config 연결을 확인해 주세요.'
-         : code === 'no_write_config'      ? '쓰기 설정이 안 돼 있습니다. VERCEL_API_TOKEN / EDGE_CONFIG_ID 를 확인해 주세요.'
-         : code === 'bad_email'            ? '이메일 형식을 확인해 주세요.'
-         :                                    '문제가 생겼습니다(' + (code || '알 수 없음') + ').';
+  function errText(d){
+    var code = d && d.error;
+    var base = code === 'bad_password'         ? '비밀번호가 틀렸습니다.'
+             : code === 'admin_not_configured' ? '서버에 ADMIN_PASSWORD 환경변수가 없습니다.'
+             : code === 'directory_unavailable'? '이용자 명단을 불러올 수 없습니다. Edge Config/Global Config 연결을 확인해 주세요.'
+             : code === 'no_write_config'      ? '쓰기 설정이 안 돼 있습니다. VERCEL_API_TOKEN / EDGE_CONFIG_ID 를 확인해 주세요.'
+             : code === 'bad_email'            ? '이메일 형식을 확인해 주세요.'
+             : code === 'upstream'             ? '버셀에 쓰기를 요청했지만 거부됐습니다(VERCEL_API_TOKEN 또는 EDGE_CONFIG_ID를 확인해 주세요).'
+             :                                    '문제가 생겼습니다(' + (code || '알 수 없음') + ').';
+    var extra = '';
+    if(d && d.status) extra += ' [HTTP ' + d.status + ']';
+    if(d && d.detail) extra += ' ' + esc(String(d.detail));
+    return base + extra;
   }
 
   function renderList(users){
@@ -148,7 +154,7 @@ th{color:var(--muted);font-weight:700;font-size:12px}
     listWrap.innerHTML = '<p class="empty">불러오는 중…</p>';
     call('GET').then(function(d){
       if(d && d.ok) renderList(d.users);
-      else listWrap.innerHTML = '<p class="empty" style="color:var(--bad)">' + errText(d && d.error) + '</p>';
+      else listWrap.innerHTML = '<p class="empty" style="color:var(--bad)">' + errText(d) + '</p>';
     });
   }
 
@@ -166,7 +172,7 @@ th{color:var(--muted);font-weight:700;font-size:12px}
         renderList(d.users);
       } else {
         pw = null;
-        pwMsg.textContent = errText(d && d.error);
+        pwMsg.textContent = errText(d);
         pwMsg.className = 'msg bad';
       }
     });
@@ -186,7 +192,7 @@ th{color:var(--muted);font-weight:700;font-size:12px}
         document.getElementById('newEmail').value = '';
         renderList(d.users);
       } else {
-        addMsg.textContent = errText(d && d.error);
+        addMsg.textContent = errText(d);
         addMsg.className = 'msg bad';
       }
     });
@@ -200,7 +206,7 @@ th{color:var(--muted);font-weight:700;font-size:12px}
     b.disabled = true;
     call('DELETE', {email:email}).then(function(d){
       if(d && d.ok) renderList(d.users);
-      else { alert(errText(d && d.error)); b.disabled = false; }
+      else { alert(errText(d)); b.disabled = false; }
     });
   });
 })();

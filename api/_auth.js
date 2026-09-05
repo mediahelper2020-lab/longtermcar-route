@@ -107,10 +107,14 @@ export async function saveAllowedUsers(users) {
       headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
       body: JSON.stringify({ items: [{ operation: 'upsert', key: 'allowed_users', value: users }] })
     });
-    if (!r.ok) return { ok: false, error: 'upstream', status: r.status };
+    if (!r.ok) {
+      let detail = '';
+      try { detail = (await r.text()).slice(0, 300); } catch (e2) { /* 무시 */ }
+      return { ok: false, error: 'upstream', status: r.status, detail: detail };
+    }
     return { ok: true };
   } catch (e) {
-    return { ok: false, error: 'upstream' };
+    return { ok: false, error: 'upstream', detail: String(e && e.message || e) };
   }
 }
 

@@ -45,7 +45,7 @@ export default async function handler(req, res) {
       addedAt: (next[email] && next[email].addedAt) || now.toISOString()
     };
     const w = await saveAllowedUsers(next);
-    if (!w.ok) return res.status(200).json({ ok: false, error: w.error || 'write_failed' });
+    if (!w.ok) return res.status(200).json({ ok: false, error: w.error || 'write_failed', status: w.status, detail: w.detail });
     return res.status(200).json({ ok: true, users: next });
   }
 
@@ -54,7 +54,7 @@ export default async function handler(req, res) {
     const next = Object.assign({}, users);
     delete next[email];
     const w = await saveAllowedUsers(next);
-    if (!w.ok) return res.status(200).json({ ok: false, error: w.error || 'write_failed' });
+    if (!w.ok) return res.status(200).json({ ok: false, error: w.error || 'write_failed', status: w.status, detail: w.detail });
     return res.status(200).json({ ok: true, users: next });
   }
 
