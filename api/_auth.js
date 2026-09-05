@@ -95,23 +95,35 @@ export async function getAllowedUsers() {
   }
 }
 
-/* 명단을 통째로 다시 쓴다. 관리자 화면에서 등록/삭제할 때만 부른다. */
+/* 버셀에 실제로 items PATCH 를 보낸다. operation 은 'update' 또는 'create'. */
+async function writeItem(id, token, qs, operation, users) {
+  const r = await fetch('https://api.vercel.com/v1/edge-config/' + id + '/items' + qs, {
+    method: 'PATCH',
+    headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ items: [{ operation: operation, key: 'allowed_users', value: users }] })
+  });
+  if (!r.ok) {
+    let detail = '';
+    try { detail = (await r.text()).slice(0, 300); } catch (e2) { /* 무시 */ }
+    return { ok: false, status: r.status, detail: detail };
+  }
+  return { ok: true };
+}
+
+/* 명단을 통째로 다시 쓴다. 관리자 화면에서 등록/삭제할 때만 부른다.
+   "allowed_users" 항목이 아직 한 번도 만들어진 적 없으면 update 가
+   404(Edge Config Item not found)로 실패하므로, 그때는 create 로 다시 쓴다. */
 export async function saveAllowedUsers(users) {
   const token = process.env.VERCEL_API_TOKEN;
   const id = process.env.EDGE_CONFIG_ID;
   if (!token || !id) return { ok: false, error: 'no_write_config' };
   const qs = process.env.VERCEL_TEAM_ID ? ('?teamId=' + encodeURIComponent(process.env.VERCEL_TEAM_ID)) : '';
   try {
-    const r = await fetch('https://api.vercel.com/v1/edge-config/' + id + '/items' + qs, {
-      method: 'PATCH',
-      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ items: [{ operation: 'upsert', key: 'allowed_users', value: users }] })
-    });
-    if (!r.ok) {
-      let detail = '';
-      try { detail = (await r.text()).slice(0, 300); } catch (e2) { /* 무시 */ }
-      return { ok: false, error: 'upstream', status: r.status, detail: detail };
+    let r = await writeItem(id, token, qs, 'update', users);
+    if (!r.ok && r.status === 404) {
+      r = await writeItem(id, token, qs, 'create', users);
     }
+    if (!r.ok) return { ok: false, error: 'upstream', status: r.status, detail: r.detail };
     return { ok: true };
   } catch (e) {
     return { ok: false, error: 'upstream', detail: String(e && e.message || e) };
