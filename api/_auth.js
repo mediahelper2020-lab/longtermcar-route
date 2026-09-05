@@ -111,8 +111,11 @@ async function writeItem(id, token, qs, operation, users) {
 }
 
 /* 명단을 통째로 다시 쓴다. 관리자 화면에서 등록/삭제할 때만 부른다.
-   "allowed_users" 항목이 아직 한 번도 만들어진 적 없으면 update 가
-   404(Edge Config Item not found)로 실패하므로, 그때는 create 로 다시 쓴다. */
+   "allowed_users" 항목이 아직 한 번도 만들어진 적 없으면 update 가 실패하므로
+   (버셀은 이때 400 "Can not update non-existing Edge Config item" 을 준다 —
+   404 로 올 거라 짐작했는데 아니었다), update 가 실패하면 상태코드를 가리지
+   않고 무조건 create 로 한 번 더 시도한다. 항목이 이미 있을 때는 update 가
+   바로 성공하니 create 는 아예 시도하지 않는다. */
 export async function saveAllowedUsers(users) {
   const token = process.env.VERCEL_API_TOKEN;
   const id = process.env.EDGE_CONFIG_ID;
@@ -120,7 +123,7 @@ export async function saveAllowedUsers(users) {
   const qs = process.env.VERCEL_TEAM_ID ? ('?teamId=' + encodeURIComponent(process.env.VERCEL_TEAM_ID)) : '';
   try {
     let r = await writeItem(id, token, qs, 'update', users);
-    if (!r.ok && r.status === 404) {
+    if (!r.ok) {
       r = await writeItem(id, token, qs, 'create', users);
     }
     if (!r.ok) return { ok: false, error: 'upstream', status: r.status, detail: r.detail };
