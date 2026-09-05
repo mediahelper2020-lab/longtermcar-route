@@ -67,24 +67,31 @@ package.json        서버리스 함수를 ESM 으로 읽게 하는 설정
 |---|---|
 | `AUTH_SECRET` | 이용자 쿠키에 서명할 임의의 긴 문자열. 아무 값이나 되지만, 한 번 정하면 바꾸지 않는다(바꾸면 모든 이용자가 다시 로그인해야 한다) |
 | `ADMIN_PASSWORD` | 관리자 화면(`/admin.html`) 비밀번호 |
-| `EDGE_CONFIG` | 이용자 명단을 읽어 오는 연결 문자열. 버셀 프로젝트에 Edge Config 를 연결하면 자동으로 채워진다 |
-| `EDGE_CONFIG_ID` | 명단을 쓰기(등록/삭제) 위해 필요. Edge Config 화면에서 `ecfg_...` 형태의 아이디를 복사 |
+| `GLOBAL_CONFIG` | 이용자 명단을 읽어 오는 연결 문자열. 버셀 프로젝트에 Global Config(예전 이름 Edge Config) 스토어를 연결하면 자동으로 채워진다 |
+| `EDGE_CONFIG_ID` | 명단을 쓰기(등록/삭제) 위해 필요. Global Config 화면에서 `ecfg_...` 형태의 아이디를 복사 |
 | `VERCEL_API_TOKEN` | 명단 쓰기에 필요. 버셀 계정 설정 → Tokens 에서 발급 |
 | `VERCEL_TEAM_ID` | 프로젝트가 팀(조직) 소속일 때만 필요 |
 
+> 버셀이 이 저장소 제품 이름을 Edge Config 에서 **Global Config** 로 바꿨다.
+> 새로 만들면 화면에 "Global Config"로 나오고, 환경변수도 자동으로
+> `GLOBAL_CONFIG` 라는 이름으로 생긴다. 예전에 만든 Edge Config 를 그대로
+> 쓰고 있어서 환경변수 이름이 `EDGE_CONFIG` 로 돼 있어도 상관없다 — 코드가
+> 둘 다 확인한다.
+
 ### 설정 절차 (버셀 대시보드)
 
-1. **Storage → Create Database → Edge Config** 로 이 프로젝트에 Edge Config 를
-   하나 만들어 연결한다. 연결하면 `EDGE_CONFIG` 환경변수가 자동으로 생긴다.
-2. 그 Edge Config 화면에서 아이디(`ecfg_...`)를 복사해 `EDGE_CONFIG_ID` 로 넣는다.
+1. **Storage → Create Database → Global Config**(예전 이름 Edge Config) 로
+   이 프로젝트에 스토어를 하나 만들어 연결한다. 연결하면 `GLOBAL_CONFIG`
+   환경변수가 자동으로 생긴다.
+2. 그 화면에서 아이디(`ecfg_...`)를 복사해 `EDGE_CONFIG_ID` 로 넣는다.
 3. 버셀 계정 **Settings → Tokens** 에서 토큰을 발급해 `VERCEL_API_TOKEN` 으로 넣는다.
    (이 토큰이 있으면 명단을 등록/삭제할 수 있으니, 카카오 REST 키와 마찬가지로
-   저장소에 커밋하지 않는다.)
+   저장소에 커밋하지 않는다. 발급할 때 Scope 를 이 프로젝트 하나로 좁혀도 된다.)
 4. `AUTH_SECRET` 에 아무 문자열이나(예: 32자리 임의 문자열) 넣는다.
 5. `ADMIN_PASSWORD` 에 관리자 비밀번호를 정해 넣는다.
 6. 다시 배포한다. `/admin.html` 에서 첫 이용자를 등록하면 바로 쓸 수 있다.
 
-Edge Config 를 아직 연결하지 않았거나 위 환경변수가 빠져 있으면, 이용
+Global Config 를 아직 연결하지 않았거나 위 환경변수가 빠져 있으면, 이용
 신청 화면에서 "이용 여부를 확인하지 못했습니다"라는 안내와 함께 앱이
 막힌 채로 배포된다 — 설정이 안 된 채로 누구에게나 열리는 사고보다
 안전한 쪽을 기본값으로 삼았다.

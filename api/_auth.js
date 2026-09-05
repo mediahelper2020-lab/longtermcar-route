@@ -2,19 +2,25 @@
 // local.js / mapkey.js / directions.js 가 함께 쓴다.
 //
 // 필요한 환경변수
-//   AUTH_SECRET        쿠키에 서명할 임의의 긴 문자열 (아무 값이나, 재배포해도 안 바뀌게)
-//   EDGE_CONFIG         버셀 Edge Config 연결 문자열 (프로젝트에 Edge Config 를
-//                       연결하면 버셀이 자동으로 넣어 준다)
-//   EDGE_CONFIG_ID      쓰기(등록/삭제)에 필요. Edge Config 화면의 아이디(ecfg_...)
+//   AUTH_SECRET         쿠키에 서명할 임의의 긴 문자열 (아무 값이나, 재배포해도 안 바뀌게)
+//   GLOBAL_CONFIG        버셀 Global Config(예전 이름 Edge Config) 연결 문자열.
+//                        프로젝트에 연결하면 버셀이 자동으로 넣어 준다. 옛 이름을 쓰는
+//                        계정은 EDGE_CONFIG 로 대신 잡혀 있어도 된다(SDK 가 둘 다 본다).
+//   EDGE_CONFIG_ID      쓰기(등록/삭제)에 필요. Global Config 화면의 아이디(ecfg_...)
 //   VERCEL_API_TOKEN    쓰기에 필요. 버셀 개인/팀 토큰
 //   VERCEL_TEAM_ID      팀 계정일 때만 필요
 //   ADMIN_PASSWORD      관리자 화면 비밀번호
 //
-// 명단은 Edge Config 의 "allowed_users" 키 하나에 이메일 → {expiresAt, addedAt}
+// 명단은 Global Config 의 "allowed_users" 키 하나에 이메일 → {expiresAt, addedAt}
 // 객체로 통째로 저장한다. 등록 인원이 많지 않은(수십~수백 명) 기관용 도구라
 // 값 하나로도 충분하고, 읽기가 한 번으로 끝난다.
+//
+// 읽기는 버셀 공식 패키지(@vercel/global-config)로 한다 — 이 패키지는
+// GLOBAL_CONFIG 환경변수를 먼저 보고, 없으면 EDGE_CONFIG 로 대신 읽는다.
+// 쓰기(등록/삭제)는 SDK 에 없어서 버셀 REST API 를 직접 부른다.
 
 import crypto from 'crypto';
+import { get as gcGet } from '@vercel/global-config';
 
 const COOKIE_NAME = 'syauth';
 
@@ -78,24 +84,11 @@ export function emailFromCookie(req) {
   return email;
 }
 
-function parseEdgeConfigConn(conn) {
-  const u = new URL(conn);
-  return { id: u.pathname.replace(/^\//, ''), token: u.searchParams.get('token') };
-}
-
-/* 지금 등록된 전체 명단을 읽는다. Edge Config 연결이 안 돼 있으면 null. */
+/* 지금 등록된 전체 명단을 읽는다. Global Config 연결이 안 돼 있으면 null. */
 export async function getAllowedUsers() {
-  const conn = process.env.EDGE_CONFIG;
-  if (!conn) return null;
+  if (!process.env.GLOBAL_CONFIG && !process.env.EDGE_CONFIG) return null;
   try {
-    const { id, token } = parseEdgeConfigConn(conn);
-    if (!id || !token) return null;
-    const r = await fetch('https://edge-config.vercel.com/' + id + '/item/allowed_users', {
-      headers: { Authorization: 'Bearer ' + token }
-    });
-    if (r.status === 404) return {}; // 아직 한 명도 등록 안 함
-    if (!r.ok) return null;
-    const data = await r.json();
+    const data = await gcGet('allowed_users');
     return (data && typeof data === 'object') ? data : {};
   } catch (e) {
     return null;

@@ -1,5 +1,8 @@
 {
   "name": "songyeong-route",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "@vercel/global-config": "^1.5.1"
+  }
 }
