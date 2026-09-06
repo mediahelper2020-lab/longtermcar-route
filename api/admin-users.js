@@ -2,10 +2,20 @@
 // 헤더가 ADMIN_PASSWORD 환경변수와 같아야 한다.
 //
 // GET    : 등록된 이메일 명단(만료일 포함)을 돌려준다
-// POST   : {email, years?} 을 받아 등록하거나 기간을 늘린다 (기본 1년)
+// POST   : {email, months?, mode?} 을 받아 등록하거나 기간을 늘린다
+//          mode 'renew'  (기본) — 오늘부터 다시 months 개월로 재설정 (기본 12개월)
+//          mode 'extend'          — 지금 남은 기간(또는 이미 지났으면 오늘)에
+//                                    months 개월을 보너스로 더한다
 // DELETE : {email} 을 받아 명단에서 뺀다
 
 import { normEmail, validEmail, getAllowedUsers, saveAllowedUsers, checkAdminPassword } from './_auth.js';
+
+function addMonths(date, months) {
+  const d = new Date(date);
+  d.setMonth(d.getMonth() + Math.floor(months));
+  d.setDate(d.getDate() + Math.round((months % 1) * 30));
+  return d;
+}
 
 export default async function handler(req, res) {
   if (!process.env.ADMIN_PASSWORD) {
@@ -34,15 +44,22 @@ export default async function handler(req, res) {
   if (users === null) return res.status(200).json({ ok: false, error: 'directory_unavailable' });
 
   if (req.method === 'POST') {
-    const years = Math.min(Math.max(parseFloat(body && body.years) || 1, 0.1), 5);
+    // years 는 예전 관리 화면과의 호환용. 새 화면은 months 를 보낸다.
+    const rawMonths = body && body.months != null ? body.months
+                    : body && body.years != null ? body.years * 12
+                    : 12;
+    const months = Math.min(Math.max(parseFloat(rawMonths) || 12, 0.5), 60);
+    const mode = (body && body.mode === 'extend') ? 'extend' : 'renew';
     const now = new Date();
-    const expires = new Date(now);
-    expires.setFullYear(expires.getFullYear() + Math.floor(years));
-    expires.setDate(expires.getDate() + Math.round((years % 1) * 365));
+    const existing = users[email];
+    const baseline = (mode === 'extend' && existing && existing.expiresAt && new Date(existing.expiresAt) > now)
+      ? new Date(existing.expiresAt)
+      : now;
+    const expires = addMonths(baseline, months);
     const next = Object.assign({}, users);
     next[email] = {
       expiresAt: expires.toISOString(),
-      addedAt: (next[email] && next[email].addedAt) || now.toISOString()
+      addedAt: (existing && existing.addedAt) || now.toISOString()
     };
     const w = await saveAllowedUsers(next);
     if (!w.ok) return res.status(200).json({ ok: false, error: w.error || 'write_failed', status: w.status, detail: w.detail });

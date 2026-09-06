@@ -33,12 +33,22 @@ button:hover{background:var(--brand-dk)}
 button:disabled{opacity:.5;cursor:default}
 button.ghost{background:none;color:var(--muted);font-weight:600;padding:6px 10px}
 button.ghost:hover{background:var(--bad-soft);color:var(--bad)}
+button.chip{background:var(--line);color:var(--ink-2);font-weight:700;padding:7px 12px;font-size:12.5px}
+button.chip:hover{background:var(--line-2)}
+button.chip.primary{background:var(--brand);color:#fff}
+button.chip.primary:hover{background:var(--brand-dk)}
+button.chip.small{padding:5px 9px;font-size:11.5px;border-radius:7px}
+.quickrow{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px}
+select{width:100%;padding:10px 11px;border:1.5px solid var(--line-2);border-radius:9px;
+  font:inherit;font-size:14px;background:#fff}
+select:focus{outline:none;border-color:var(--brand)}
 .msg{font-size:12.5px;margin:10px 0 0;color:var(--muted)}
 .msg.bad{color:var(--bad);font-weight:700}
 .msg.ok{color:var(--ok);font-weight:700}
 table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:4px}
-th,td{text-align:left;padding:9px 6px;border-bottom:1px solid var(--line)}
+th,td{text-align:left;padding:9px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
 th{color:var(--muted);font-weight:700;font-size:12px}
+.actions{display:flex;flex-wrap:wrap;gap:5px;justify-content:flex-end}
 .tag{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11.5px;font-weight:700}
 .tag.ok{background:var(--ok-soft);color:var(--ok)}
 .tag.bad{background:var(--bad-soft);color:var(--bad)}
@@ -64,17 +74,31 @@ th{color:var(--muted);font-weight:700;font-size:12px}
 
   <div class="card">
     <h2>이용자 등록 / 기간 연장</h2>
-    <div class="row">
+    <label>이메일</label>
+    <input type="email" id="newEmail" placeholder="이름@기관.com" autocomplete="off">
+
+    <div class="quickrow">
+      <button type="button" class="chip primary" data-mode="renew" data-months="12">1년 갱신(오늘부터)</button>
+      <button type="button" class="chip" data-mode="extend" data-months="1">+1개월 보너스</button>
+      <button type="button" class="chip" data-mode="extend" data-months="2">+2개월 보너스</button>
+      <button type="button" class="chip" data-mode="extend" data-months="3">+3개월 보너스</button>
+      <button type="button" class="chip" data-mode="extend" data-months="6">+6개월 보너스</button>
+    </div>
+
+    <div class="row" style="margin-top:12px">
       <div>
-        <label>이메일</label>
-        <input type="email" id="newEmail" placeholder="이름@기관.com" autocomplete="off">
+        <label>직접 설정(개월)</label>
+        <input type="number" id="customMonths" value="12" min="0.5" max="60" step="0.5">
       </div>
-      <div style="flex:0 0 90px">
-        <label>기간(년)</label>
-        <input type="number" id="newYears" value="1" min="0.1" max="5" step="0.5">
+      <div>
+        <label>방식</label>
+        <select id="customMode">
+          <option value="renew">오늘부터 재설정 (갱신)</option>
+          <option value="extend">남은 기간에 더하기 (보너스)</option>
+        </select>
       </div>
     </div>
-    <div style="margin-top:12px"><button type="button" id="addGo">등록 / 연장</button></div>
+    <div style="margin-top:10px"><button type="button" id="customGo">직접 설정 적용</button></div>
     <p class="msg" id="addMsg"></p>
   </div>
 
@@ -144,7 +168,12 @@ th{color:var(--muted);font-weight:700;font-size:12px}
               '<td>' + (e.addedAt ? fmt(e.addedAt) : '') + '</td>' +
               '<td>' + (e.expiresAt ? fmt(e.expiresAt) : '') + '</td>' +
               '<td><span class="tag ' + (active ? 'ok' : 'bad') + '">' + (active ? '이용 가능' : '만료') + '</span></td>' +
-              '<td><button type="button" class="ghost" data-del="' + esc(email) + '">삭제</button></td></tr>';
+              '<td><div class="actions">' +
+                '<button type="button" class="chip small" data-ext="' + esc(email) + '" data-months="1" data-mode="extend">+1개월</button>' +
+                '<button type="button" class="chip small" data-ext="' + esc(email) + '" data-months="3" data-mode="extend">+3개월</button>' +
+                '<button type="button" class="chip small primary" data-ext="' + esc(email) + '" data-months="12" data-mode="renew">1년 갱신</button>' +
+                '<button type="button" class="ghost" data-del="' + esc(email) + '">삭제</button>' +
+              '</div></td></tr>';
     });
     html += '</tbody></table>';
     listWrap.innerHTML = html;
@@ -180,31 +209,62 @@ th{color:var(--muted);font-weight:700;font-size:12px}
   pwGo.addEventListener('click', tryPw);
   pwInput.addEventListener('keydown', function(e){ if(e.key === 'Enter') tryPw(); });
 
-  document.getElementById('addGo').addEventListener('click', function(){
-    var email = document.getElementById('newEmail').value.trim();
-    var years = parseFloat(document.getElementById('newYears').value) || 1;
-    if(!email){ addMsg.textContent = '이메일을 입력해 주세요.'; addMsg.className = 'msg bad'; return; }
-    addMsg.textContent = '등록 중…'; addMsg.className = 'msg';
-    call('POST', {email:email, years:years}).then(function(d){
+  function monthsLabel(months, mode){
+    var m = months >= 12 && months % 12 === 0 ? (months/12) + '년' : months + '개월';
+    return mode === 'extend' ? ('+' + m + ' 보너스 연장') : (m + ' 갱신(오늘부터)');
+  }
+
+  function applyToEmail(email, months, mode, statusEl, btn){
+    if(!email){ statusEl.textContent = '이메일을 입력해 주세요.'; statusEl.className = 'msg bad'; return; }
+    if(btn) btn.disabled = true;
+    statusEl.textContent = monthsLabel(months, mode) + ' 처리 중…'; statusEl.className = 'msg';
+    call('POST', {email:email, months:months, mode:mode}).then(function(d){
+      if(btn) btn.disabled = false;
       if(d && d.ok){
-        addMsg.textContent = esc(email) + ' 등록 완료';
-        addMsg.className = 'msg ok';
-        document.getElementById('newEmail').value = '';
+        var exp = d.users[email] && d.users[email].expiresAt;
+        statusEl.textContent = esc(email) + ' — ' + monthsLabel(months, mode) +
+          ' 완료' + (exp ? ' (새 만료일 ' + fmt(exp) + ')' : '');
+        statusEl.className = 'msg ok';
         renderList(d.users);
       } else {
-        addMsg.textContent = errText(d);
-        addMsg.className = 'msg bad';
+        statusEl.textContent = errText(d);
+        statusEl.className = 'msg bad';
       }
+    });
+  }
+
+  // 등록 카드의 빠른 버튼들 (1년 갱신 / +N개월 보너스)
+  document.querySelectorAll('.quickrow [data-mode]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var email = document.getElementById('newEmail').value.trim();
+      applyToEmail(email, parseFloat(btn.getAttribute('data-months')), btn.getAttribute('data-mode'), addMsg, btn);
     });
   });
 
+  // 등록 카드의 직접 설정
+  document.getElementById('customGo').addEventListener('click', function(){
+    var email = document.getElementById('newEmail').value.trim();
+    var months = parseFloat(document.getElementById('customMonths').value) || 12;
+    var mode = document.getElementById('customMode').value;
+    applyToEmail(email, months, mode, addMsg, this);
+  });
+
+  // 등록된 이용자 표의 빠른 연장/갱신/삭제 버튼
   listWrap.addEventListener('click', function(e){
+    var ext = e.target.closest ? e.target.closest('[data-ext]') : null;
+    if(ext){
+      var email = ext.getAttribute('data-ext');
+      var months = parseFloat(ext.getAttribute('data-months'));
+      var mode = ext.getAttribute('data-mode');
+      applyToEmail(email, months, mode, addMsg, ext);
+      return;
+    }
     var b = e.target.closest ? e.target.closest('[data-del]') : null;
     if(!b) return;
-    var email = b.getAttribute('data-del');
-    if(!confirm(email + ' 을(를) 명단에서 빼시겠습니까?')) return;
+    var delEmail = b.getAttribute('data-del');
+    if(!confirm(delEmail + ' 을(를) 명단에서 빼시겠습니까?')) return;
     b.disabled = true;
-    call('DELETE', {email:email}).then(function(d){
+    call('DELETE', {email:delEmail}).then(function(d){
       if(d && d.ok) renderList(d.users);
       else { alert(errText(d)); b.disabled = false; }
     });
