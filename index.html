@@ -66,6 +66,8 @@ body{margin:0;background:var(--bg);color:var(--ink);
   flex:none;margin-top:5px}
 .srcline.ok{color:var(--ink-2)}
 .srcline.ok::before{background:var(--ok);box-shadow:0 0 0 3px rgba(18,128,92,.15)}
+.srcline.warn{color:var(--bad);font-weight:700}
+.srcline.warn::before{background:var(--bad);box-shadow:0 0 0 3px rgba(200,55,45,.15)}
 
 /* ----- 등원/하원 ----- */
 .modebar{display:flex;gap:3px;margin:11px 16px 0;padding:3px;
@@ -365,6 +367,7 @@ select{font:inherit;padding:9px 10px;border:1px solid var(--line-2);border-radiu
     <div class="chips">
       <p class="srcline" id="srcline">주소 검색 준비 중</p>
       <p class="srcline" id="mapline">지도 준비 중</p>
+      <p class="srcline" id="expireLine" hidden></p>
     </div>
 
     <div class="modebar">
@@ -2458,8 +2461,24 @@ var agEmail = document.getElementById('agEmail');
 var agGo = document.getElementById('agGo');
 var agMsg = document.getElementById('agMsg');
 
-function unlock(){
+var expireLine = document.getElementById('expireLine');
+var EXPIRE_WARN_DAYS = 14;
+
+function showExpiry(expiresAt){
+  if(!expiresAt) return;
+  var exp = new Date(expiresAt);
+  if(isNaN(exp.getTime())) return;
+  var days = Math.ceil((exp.getTime() - Date.now()) / 86400000);
+  var dateTxt = exp.getFullYear() + '.' + (exp.getMonth()+1) + '.' + exp.getDate();
+  var dTxt = days < 0 ? '기간 만료' : days === 0 ? '오늘까지' : 'D-' + days;
+  expireLine.textContent = '이용기간 ' + dateTxt + '까지 (' + dTxt + ')';
+  expireLine.className = 'srcline' + (days <= EXPIRE_WARN_DAYS ? ' warn' : '');
+  expireLine.hidden = false;
+}
+
+function unlock(expiresAt){
   authGate.style.display = 'none';
+  showExpiry(expiresAt);
   boot();
 }
 
@@ -2485,7 +2504,7 @@ function tryLogin(){
     body: JSON.stringify({email:email}), signal: timeout(9000)
   }).then(function(r){ return r.json(); }).then(function(d){
     agGo.disabled = false;
-    if(d && d.ok) unlock();
+    if(d && d.ok) unlock(d.expiresAt);
     else agSay(authErrorText(d && d.error), true);
   }).catch(function(){
     agGo.disabled = false;
@@ -2496,7 +2515,7 @@ agGo.addEventListener('click', tryLogin);
 agEmail.addEventListener('keydown', function(e){ if(e.key === 'Enter') tryLogin(); });
 
 fetch('/api/auth', {signal: timeout(9000)}).then(function(r){ return r.json(); }).then(function(d){
-  if(d && d.ok){ unlock(); return; }
+  if(d && d.ok){ unlock(d.expiresAt); return; }
   agEmail.disabled = false; agGo.disabled = false;
   agSay('');
   agEmail.focus();
