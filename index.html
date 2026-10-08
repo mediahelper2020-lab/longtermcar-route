@@ -24,6 +24,75 @@ body{margin:0;background:var(--bg);color:var(--ink);
   font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,system-ui,"Malgun Gothic",sans-serif;
   font-size:15px;line-height:1.55;-webkit-text-size-adjust:100%;word-break:keep-all}
 
+/* ----- 시작 화면 ----- */
+.intro{position:fixed;inset:0;z-index:10000;overflow:hidden;cursor:pointer;color:#fff;
+  --px:0;--py:0;
+  background:radial-gradient(1000px 640px at 50% 42%, #1d4fb8 0%, #0f2a7a 45%, #081446 100%);
+  display:flex;align-items:center;justify-content:center;
+  transition:opacity .6s ease, transform .6s ease, filter .6s ease}
+.intro.out{opacity:0;transform:scale(1.06);filter:blur(6px);pointer-events:none}
+.intro-scene{position:absolute;inset:-3%;width:106%;height:106%;
+  transform:translate(calc(var(--px) * -26px), calc(var(--py) * -18px));transition:transform .5s ease-out}
+.ir{fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1}
+.ir-a{stroke:#f4623a;stroke-width:7;animation:introDraw 1.9s cubic-bezier(.45,0,.25,1) .15s forwards;
+  filter:drop-shadow(0 0 8px rgba(244,98,58,.55))}
+.ir-b{stroke:#7fb0ff;stroke-width:5;opacity:.55;animation:introDraw 1.9s cubic-bezier(.45,0,.25,1) .35s forwards}
+.istop{transform-box:fill-box;transform-origin:center;transform:scale(0);
+  animation:introPop .45s cubic-bezier(.34,1.56,.64,1) var(--d) forwards}
+.istop circle{fill:#fff;stroke:#f4623a;stroke-width:4}
+.istop text{fill:#f4623a;font:800 13px "Pretendard Variable",Pretendard,sans-serif;text-anchor:middle}
+.istop.b circle{stroke:#7fb0ff;opacity:.8}
+.ivan{fill:#fff;filter:drop-shadow(0 0 10px #fff)}
+.intro-center{position:relative;text-align:center;padding:0 24px;
+  transform:translate(calc(var(--px) * 14px), calc(var(--py) * 10px));transition:transform .5s ease-out}
+/* 뒤로 지나가는 경로선이 글자를 가리지 않게 가운데를 살짝 어둡게 깐다 */
+.intro-center::before{content:"";position:absolute;inset:-70px -110px;z-index:-1;
+  background:radial-gradient(closest-side, rgba(8,22,78,.78), rgba(8,22,78,0))}
+.intro-logo{position:relative;width:96px;height:96px;margin:0 auto 18px;border-radius:24px;
+  background:#fff;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 18px 50px rgba(0,0,0,.35), 0 0 0 1px rgba(255,255,255,.4);
+  opacity:0;animation:introLogo .8s cubic-bezier(.34,1.56,.64,1) .1s forwards}
+.intro-logo svg{position:relative;z-index:1;border-radius:15px}
+.intro-ring{position:absolute;inset:0;border-radius:24px;border:2px solid rgba(255,255,255,.7);
+  opacity:0;animation:introRing 1.6s ease-out .55s infinite}
+.intro-ring.r2{animation-delay:1.1s}
+.intro-title{margin:0;font-size:44px;font-weight:900;letter-spacing:-.04em;line-height:1.1}
+.intro-title span{display:inline-block;opacity:0;
+  animation:introChar .6s cubic-bezier(.22,1,.36,1) calc(.45s + var(--i) * .07s) forwards}
+.intro-title .m{color:#ffcf5a}
+.intro-slogan{margin:14px 0 0;font-size:18px;font-weight:700;color:#e3ecff;letter-spacing:-.02em;
+  opacity:0;animation:introFade .7s ease-out 1s forwards}
+.intro-cap{margin:7px 0 0;font-size:12.5px;font-weight:600;color:#a9bfef;letter-spacing:.02em;
+  opacity:0;animation:introFade .7s ease-out 1.25s forwards}
+.intro-bar{position:absolute;left:50%;bottom:58px;width:150px;height:3px;margin-left:-75px;
+  border-radius:9px;background:rgba(255,255,255,.18);overflow:hidden}
+.intro-bar i{display:block;height:100%;width:0;background:#fff;border-radius:9px;
+  animation:introBar 3s linear forwards}
+.intro-skip{position:absolute;top:18px;right:18px;border:1px solid rgba(255,255,255,.35);
+  background:rgba(255,255,255,.1);color:#fff;font:inherit;font-size:12.5px;font-weight:700;
+  padding:7px 13px;border-radius:99px;cursor:pointer;backdrop-filter:blur(4px)}
+.intro-skip:hover{background:rgba(255,255,255,.22)}
+.intro-hint{position:absolute;left:0;right:0;bottom:24px;margin:0;text-align:center;
+  font-size:11.5px;color:rgba(255,255,255,.55);opacity:0;animation:introFade .6s ease-out 1.6s forwards}
+@keyframes introDraw{to{stroke-dashoffset:0}}
+@keyframes introPop{0%{transform:scale(0)}100%{transform:scale(1)}}
+@keyframes introLogo{0%{opacity:0;transform:scale(.4) rotate(-12deg)}100%{opacity:1;transform:none}}
+@keyframes introRing{0%{opacity:.7;transform:scale(1)}100%{opacity:0;transform:scale(1.9)}}
+@keyframes introChar{0%{opacity:0;transform:translateY(26px);filter:blur(6px)}100%{opacity:1;transform:none;filter:none}}
+@keyframes introFade{0%{opacity:0;transform:translateY(10px)}100%{opacity:1;transform:none}}
+@keyframes introBar{to{width:100%}}
+@media (max-width:520px){
+  .intro-title{font-size:36px}
+  .intro-slogan{font-size:15.5px}
+  .intro-logo{width:84px;height:84px}
+  .intro-logo svg{width:76px;height:76px}
+}
+@media (prefers-reduced-motion: reduce){
+  .intro *,.intro{animation-duration:.01ms !important;animation-delay:0s !important;transition:none !important}
+  .ivan,.intro-ring{display:none}
+}
+@media print{ .intro{display:none !important} }
+
 /* ----- 이용 신청(로그인) 가림막 ----- */
 .authgate{position:fixed;inset:0;z-index:9999;background:var(--bg);
   display:flex;align-items:center;justify-content:center;padding:20px}
@@ -73,19 +142,40 @@ body{margin:0;background:var(--bg);color:var(--ink);
 /* ----- 등원/하원 ----- */
 .modebar{display:flex;gap:3px;margin:11px 16px 0;padding:3px;
   background:var(--panel-2);border:1px solid var(--line);border-radius:11px}
-.modebtn{flex:1;border:0;background:none;padding:9px 0;font:inherit;font-size:13px;font-weight:800;
-  color:var(--muted);cursor:pointer;border-radius:8px;letter-spacing:-.01em}
-.modebtn.on{background:var(--brand);color:#fff}
-.modebtn:not(.on):hover{color:var(--ink-2)}
+.modebtn{flex:1;border:0;background:none;padding:10px 0;font:inherit;font-size:13.5px;font-weight:800;
+  color:var(--ink-2);cursor:pointer;border-radius:8px;letter-spacing:-.01em;
+  display:flex;align-items:center;justify-content:center;gap:6px;transition:background .15s,color .15s}
+.modebtn.on{background:var(--brand);color:#fff;box-shadow:0 2px 8px rgba(18,87,196,.30)}
+.modebtn:not(.on):hover{background:#fff;color:var(--brand)}
 
-/* ----- 탭 ----- */
-.tabs{display:flex;gap:2px;margin:8px 16px 0;padding:4px;
+/* ----- 탭 (단계 번호가 붙은 4단계) ----- */
+.tabs{display:flex;gap:3px;margin:8px 16px 0;padding:4px;
   background:var(--panel-2);border:1px solid var(--line);border-radius:12px}
-.tab{flex:1;border:0;background:none;padding:8px 0;font:inherit;font-size:12px;font-weight:700;
-  color:var(--muted);cursor:pointer;border-radius:9px;letter-spacing:-.01em}
-.tab.on{background:#fff;color:var(--brand);box-shadow:0 1px 2px rgba(16,24,40,.10)}
-.tab:not(.on):not(:disabled):hover{color:var(--ink-2)}
-.tab:disabled{opacity:.4;cursor:default}
+.tab{flex:1;border:0;background:none;padding:7px 0 6px;font:inherit;font-size:12px;font-weight:800;
+  color:var(--ink-2);cursor:pointer;border-radius:9px;letter-spacing:-.01em;
+  display:flex;flex-direction:column;align-items:center;gap:3px;transition:background .15s,color .15s}
+.tab .tno{width:19px;height:19px;border-radius:50%;background:#dfe4ec;color:var(--ink-2);
+  font-size:10.5px;font-weight:800;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.tab.on{background:#fff;color:var(--brand);box-shadow:0 1px 3px rgba(16,24,40,.14)}
+.tab.on .tno{background:var(--brand);color:#fff}
+.tab:not(.on):not(:disabled):hover{background:#fff;color:var(--brand)}
+.tab:not(.on):not(:disabled):hover .tno{background:var(--brand-soft);color:var(--brand)}
+.tab:disabled{opacity:.45;cursor:default}
+
+/* ----- 버튼 아이콘 (CSS 마스크라서 글자를 바꿔도 아이콘이 유지된다) ----- */
+.ic::before{content:"";flex:none;width:15px;height:15px;background:currentColor;
+  -webkit-mask:var(--ic) center/contain no-repeat;mask:var(--ic) center/contain no-repeat}
+.ic-plus{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round'%3E%3Cpath d='M12 5v14M5 12h14'/%3E%3C/svg%3E")}
+.ic-check{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.5 12.5l5 5 10-11'/%3E%3C/svg%3E")}
+.ic-clear{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round'%3E%3Crect x='4' y='4' width='16' height='16' rx='3'/%3E%3C/svg%3E")}
+.ic-trash{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13'/%3E%3C/svg%3E")}
+.ic-spark{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'%3E%3Cpath d='M12 2l2.2 6.3L20.5 10l-6.3 2.2L12 18.5l-2.2-6.3L3.5 10l6.3-1.7z'/%3E%3C/svg%3E")}
+.ic-list{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01'/%3E%3C/svg%3E")}
+.ic-print{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linejoin='round'%3E%3Cpath d='M7 9V3h10v6M7 17H4v-7h16v7h-3M7 14h10v7H7z'/%3E%3C/svg%3E")}
+.ic-copy{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linejoin='round'%3E%3Crect x='8' y='8' width='12' height='13' rx='2'/%3E%3Cpath d='M16 8V4H4v13h4'/%3E%3C/svg%3E")}
+.ic-route{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='6' cy='18' r='2.5'/%3E%3Ccircle cx='18' cy='6' r='2.5'/%3E%3Cpath d='M8.5 18H15a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h6.5'/%3E%3C/svg%3E")}
+.ic-sunrise{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.3' stroke-linecap='round'%3E%3Cpath d='M5 18a7 7 0 0 1 14 0M3 21h18M12 3v4M4.6 8.6l2 2M19.4 8.6l-2 2'/%3E%3C/svg%3E")}
+.ic-home{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 11L12 4l8.5 7M6 9.5V20h12V9.5'/%3E%3C/svg%3E")}
 
 .pbody{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:13px 16px 18px;
   background:var(--panel-2)}
@@ -124,15 +214,24 @@ input:focus,textarea:focus{outline:none;border-color:var(--brand);
 .pin.ok{color:var(--ok)}
 .pin.bad{color:var(--bad)}
 .pin:empty{display:none}
-.iconbtn{border:1px solid var(--line-2);background:#fff;border-radius:9px;height:40px;cursor:pointer;
-  color:#9aa3b0;font-size:16px;line-height:1}
+.iconbtn{border:1px solid #c7cfdb;background:#fff;border-radius:9px;height:40px;cursor:pointer;
+  color:#5d6676;font-size:16px;line-height:1;transition:background .15s,color .15s,border-color .15s}
 .iconbtn:hover{border-color:var(--bad);color:var(--bad);background:#fef4f3}
 
-.rowbtns{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
-.chip{border:1px solid var(--line-2);background:#fff;border-radius:9px;padding:7px 12px;font:inherit;
-  font-size:12.5px;font-weight:700;cursor:pointer;color:var(--ink-2);letter-spacing:-.01em}
+.rowbtns{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.chip{display:inline-flex;align-items:center;justify-content:center;gap:5px;
+  border:1.5px solid #c7cfdb;background:#fff;border-radius:10px;padding:8px 13px;font:inherit;
+  font-size:13px;font-weight:700;cursor:pointer;color:var(--ink);letter-spacing:-.01em;
+  box-shadow:0 1px 2px rgba(16,24,40,.06);transition:background .15s,color .15s,border-color .15s,transform .1s}
 .chip:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-soft)}
-.chip.quiet{color:var(--muted);font-weight:600}
+.chip:active{transform:translateY(1px)}
+.chip:disabled{opacity:.5;cursor:default;transform:none}
+.chip.primary{background:var(--brand);border-color:var(--brand);color:#fff;box-shadow:0 2px 6px rgba(18,87,196,.28)}
+.chip.primary:hover{background:var(--brand-dk);border-color:var(--brand-dk);color:#fff}
+.chip.quiet{background:var(--panel-2);color:var(--ink-2);font-weight:700}
+.chip.quiet:hover{background:var(--brand-soft);color:var(--brand)}
+.chip.danger{color:var(--bad);border-color:#efc4bf;background:#fff}
+.chip.danger:hover{background:#fef4f3;border-color:var(--bad);color:var(--bad)}
 
 .more{border:1px solid var(--line);border-radius:13px;margin-bottom:10px;background:#fff;overflow:hidden}
 .more summary{padding:12px 15px;font-size:13px;font-weight:700;cursor:pointer;list-style:none;
@@ -194,9 +293,9 @@ select{font:inherit;padding:9px 10px;border:1px solid var(--line-2);border-radiu
 .vcard .iconbtn.edit:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-soft)}
 .vcard .iconbtn:disabled{opacity:.35;cursor:default}
 
-.addcar{width:100%;margin-top:2px;padding:10px;border:1.5px dashed var(--line-2);border-radius:11px;background:none;
-  font:inherit;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer}
-.addcar:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-soft)}
+.addcar{width:100%;margin-top:2px;padding:11px;border:1.5px dashed #9db6e4;border-radius:11px;background:var(--brand-soft);
+  font:inherit;font-size:13.5px;font-weight:800;color:var(--brand);cursor:pointer;transition:background .15s,border-color .15s}
+.addcar:hover{border-color:var(--brand);border-style:solid;background:#dfe9fc}
 .addcar:disabled{opacity:.5;cursor:default;background:none;border-color:var(--line-2);color:var(--muted)}
 
 .vpicker{margin-top:9px;padding:13px;border:1.5px solid var(--brand);border-radius:13px;background:#fbfcff}
@@ -231,6 +330,34 @@ select{font:inherit;padding:9px 10px;border:1px solid var(--line-2);border-radiu
 
 .tcar{border-left-width:4px}
 
+/* ----- 도로 보정 계수 ----- */
+.factorbox{margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.fhead{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.fhead b{font-size:13.5px;font-weight:800}
+.fhead span{margin-left:auto;font-size:11.5px;color:var(--muted);font-weight:600}
+.fhead em{font-style:normal;color:var(--brand);font-weight:800;background:var(--brand-soft);
+  border-radius:6px;padding:1px 6px;margin-left:2px}
+.fexplain{margin:6px 0 10px;font-size:11.5px;line-height:1.55;color:var(--ink-2);
+  background:var(--panel-2);border-radius:9px;padding:8px 10px}
+.fexplain b{color:var(--ink)}
+.factorlist{display:flex;flex-direction:column;gap:6px}
+.fopt{display:flex;align-items:center;gap:10px;width:100%;text-align:left;font:inherit;cursor:pointer;
+  border:1.5px solid var(--line);background:#fff;border-radius:11px;padding:9px 11px;color:var(--ink);
+  transition:border-color .15s,background .15s}
+.fopt:hover{border-color:#9db6e4}
+.fopt .fi{flex:none;width:34px;height:34px;border-radius:10px;background:var(--panel-2);color:var(--ink-2);
+  display:flex;align-items:center;justify-content:center}
+.fopt .ft{flex:1;min-width:0}
+.fopt .ft b{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:800}
+.fopt .ft b small{font-size:10px;font-weight:800;color:#fff;background:var(--ok);border-radius:5px;padding:1px 5px}
+.fopt .ft span{display:block;font-size:11px;color:var(--muted);line-height:1.45;margin-top:1px}
+.fopt .fv{flex:none;font-size:13px;font-weight:800;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.fopt.on{border-color:var(--brand);background:var(--brand-soft)}
+.fopt.on .fi{background:var(--brand);color:#fff}
+.fopt.on .fv{color:var(--brand)}
+.fcustom{margin-top:8px}
+.fcustom label{display:block;font-size:11.5px;color:var(--muted);margin-bottom:4px;font-weight:600}
+
 /* ----- 어르신 관리 ----- */
 .rrow{display:flex;align-items:center;gap:8px;padding:9px 10px;border:1px solid var(--line);
   border-radius:10px;margin-bottom:6px;background:#fff}
@@ -259,10 +386,14 @@ select{font:inherit;padding:9px 10px;border:1px solid var(--line-2);border-radiu
 /* ----- 아래 고정 버튼 ----- */
 .pfoot{border-top:1px solid var(--line);padding:12px 16px;background:#fff;
   padding-bottom:calc(12px + env(safe-area-inset-bottom))}
-.go{width:100%;border:0;border-radius:11px;background:var(--brand);color:#fff;font:inherit;
-  font-size:15px;font-weight:800;padding:13px;cursor:pointer;letter-spacing:-.02em;
-  box-shadow:0 1px 2px rgba(18,87,196,.28), 0 6px 16px rgba(18,87,196,.18)}
-.go:hover{background:var(--brand-dk)}
+.go{width:100%;border:0;border-radius:12px;background:linear-gradient(135deg,#1a66dc,#0e46a8);color:#fff;font:inherit;
+  font-size:15.5px;font-weight:800;padding:14px;cursor:pointer;letter-spacing:-.02em;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  box-shadow:0 1px 2px rgba(18,87,196,.28), 0 8px 20px rgba(18,87,196,.26);transition:filter .15s,box-shadow .15s}
+.go::before{content:"";width:18px;height:18px;background:currentColor;
+  -webkit-mask:var(--ic) center/contain no-repeat;mask:var(--ic) center/contain no-repeat;
+  --ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='6' cy='18' r='2.5'/%3E%3Ccircle cx='18' cy='6' r='2.5'/%3E%3Cpath d='M8.5 18H15a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h6.5'/%3E%3C/svg%3E")}
+.go:hover{filter:brightness(1.08);box-shadow:0 1px 2px rgba(18,87,196,.28), 0 10px 24px rgba(18,87,196,.34)}
 .go:active{transform:translateY(1px)}
 .go:disabled{background:#a8bcdd;box-shadow:none;cursor:default;transform:none}
 .status{font-size:11.5px;color:var(--muted);text-align:center;margin-top:7px;min-height:16px}
@@ -314,10 +445,12 @@ select{font:inherit;padding:9px 10px;border:1px solid var(--line-2);border-radiu
 .leg{display:flex;gap:10px}
 .leg .txt{font-size:11.5px;color:var(--muted);padding:0 0 2px;
   display:flex;align-items:center;gap:8px}
-.nav{margin-left:auto;flex:none;font-size:11px;font-weight:700;color:var(--brand);
-  text-decoration:none;border:1px solid var(--line-2);border-radius:7px;padding:2px 8px;
-  background:#fff;white-space:nowrap}
-.nav:hover{border-color:var(--brand);background:var(--brand-soft)}
+/* 카카오맵으로 넘어가는 버튼이라 카카오 노란색으로 한눈에 알아보게 한다 */
+.nav{margin-left:auto;flex:none;font-size:11.5px;font-weight:800;color:#191600;
+  text-decoration:none;border:0;border-radius:8px;padding:4px 10px;
+  background:#fee500;white-space:nowrap;box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.nav::after{content:" ›";font-weight:800}
+.nav:hover{background:#f5d900}
 
 .madeby{margin-top:14px;padding:12px 4px 2px;display:flex;flex-direction:column;gap:2px;
   border-top:1px solid var(--line);font-size:11px;line-height:1.6;color:var(--muted)}
@@ -400,6 +533,78 @@ select{font:inherit;padding:9px 10px;border:1px solid var(--line-2);border-radiu
 </head>
 <body>
 
+<div class="intro" id="intro" aria-label="송영MAP 시작 화면">
+  <svg class="intro-scene" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs>
+      <pattern id="introGrid" width="48" height="48" patternUnits="userSpaceOnUse">
+        <path d="M48 0H0V48" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="1"/>
+      </pattern>
+    </defs>
+    <rect width="1200" height="800" fill="url(#introGrid)"/>
+    <path class="ir ir-b" pathLength="1" d="M1260 170 C1100 110 1010 230 900 190 S720 70 620 120 S450 230 320 170 S130 90 -60 160"/>
+    <path id="introRoute" class="ir ir-a" pathLength="1" d="M-60 560 C110 490 230 650 380 620 S560 650 660 615 S850 600 960 540 S1100 340 1260 370"/>
+    <g class="istop" style="--d:.6s"><circle cx="380" cy="620" r="13"/><text x="380" y="625">1</text></g>
+    <g class="istop" style="--d:1s"><circle cx="660" cy="615" r="13"/><text x="660" y="620">2</text></g>
+    <g class="istop" style="--d:1.4s"><circle cx="960" cy="540" r="13"/><text x="960" y="545">3</text></g>
+    <g class="istop b" style="--d:.8s"><circle cx="620" cy="120" r="10"/></g>
+    <g class="istop b" style="--d:1.15s"><circle cx="320" cy="170" r="10"/></g>
+    <circle class="ivan" r="9">
+      <animateMotion dur="1.9s" begin="0.15s" fill="freeze" keyPoints="0;1" keyTimes="0;1" calcMode="spline" keySplines=".45 0 .25 1">
+        <mpath href="#introRoute"/>
+      </animateMotion>
+    </circle>
+  </svg>
+  <div class="intro-center">
+    <div class="intro-logo">
+      <span class="intro-ring"></span><span class="intro-ring r2"></span>
+      <svg viewBox="0 0 64 64" width="88" height="88" aria-hidden="true">
+        <rect width="64" height="64" rx="15" fill="#0e1a63"/>
+        <circle cx="32" cy="15.5" r="8.8" fill="#d9edf8"/>
+        <path d="M5.5 27.5c0-1.3.9-1.9 2.1-1.7 9.4 1.4 17.9 4.6 22.9 8.8v22.9c-5-4.2-13.5-7.3-22.9-8.7
+                 -1.2-.2-2.1-.9-2.1-2.2z" fill="#d9edf8"/>
+        <path d="M58.5 27.5c0-1.3-.9-1.9-2.1-1.7-9.4 1.4-17.9 4.6-22.9 8.8v22.9c5-4.2 13.5-7.3 22.9-8.7
+                 1.2-.2 2.1-.9 2.1-2.2z" fill="#d9edf8"/>
+        <rect x="25.6" y="31.5" width="4.6" height="28.5" rx="2.3" fill="#d9edf8"/>
+        <rect x="33.8" y="31.5" width="4.6" height="28.5" rx="2.3" fill="#d9edf8"/>
+      </svg>
+    </div>
+    <h1 class="intro-title" aria-label="송영MAP"><span style="--i:0">송</span><span style="--i:1">영</span><span class="m" style="--i:2">M</span><span class="m" style="--i:3">A</span><span class="m" style="--i:4">P</span></h1>
+    <p class="intro-slogan">어르신 송영, 가장 짧고 편안한 길로</p>
+    <p class="intro-cap">주간보호센터 스마트 송영경로 설계</p>
+  </div>
+  <div class="intro-bar"><i></i></div>
+  <button type="button" class="intro-skip" id="introSkip">건너뛰기 ›</button>
+  <p class="intro-hint">화면을 누르면 바로 시작합니다</p>
+</div>
+<script>
+/* 시작 화면: 같은 탭에서는 한 번만 보여 준다(새로고침 때는 건너뜀).
+   누르거나 Esc·Enter·Space 를 누르면 바로 넘어간다. */
+(function(){
+  var el = document.getElementById('intro');
+  var seen = false;
+  try{ seen = sessionStorage.getItem('sy.intro') === '1'; }catch(e){}
+  if(seen){ el.parentNode.removeChild(el); return; }
+  try{ sessionStorage.setItem('sy.intro', '1'); }catch(e){}
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var done = false;
+  function close(){
+    if(done) return;
+    done = true;
+    el.classList.add('out');
+    document.removeEventListener('keydown', onKey);
+    setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 650);
+  }
+  function onKey(e){ if(e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') close(); }
+  el.addEventListener('click', close);
+  document.addEventListener('keydown', onKey);
+  el.addEventListener('pointermove', function(e){
+    el.style.setProperty('--px', (e.clientX / window.innerWidth - .5).toFixed(3));
+    el.style.setProperty('--py', (e.clientY / window.innerHeight - .5).toFixed(3));
+  });
+  setTimeout(close, reduce ? 900 : 3100);
+})();
+</script>
+
 <div class="authgate" id="authGate">
   <div class="agcard">
     <div class="agmark" aria-hidden="true">
@@ -451,15 +656,15 @@ select{font:inherit;padding:9px 10px;border:1px solid var(--line-2);border-radiu
     </div>
 
     <div class="modebar">
-      <button type="button" class="modebtn on" id="modeArrival">등원 송영</button>
-      <button type="button" class="modebtn" id="modeDeparture">하원 송영</button>
+      <button type="button" class="modebtn on ic ic-sunrise" id="modeArrival">등원 송영</button>
+      <button type="button" class="modebtn ic ic-home" id="modeDeparture">하원 송영</button>
     </div>
 
     <div class="tabs">
-      <button type="button" class="tab on" id="tabCenter">센터</button>
-      <button type="button" class="tab" id="tabRoster">어르신</button>
-      <button type="button" class="tab" id="tabToday">오늘 송영</button>
-      <button type="button" class="tab" id="tabResult" disabled>결과</button>
+      <button type="button" class="tab on" id="tabCenter"><span class="tno">1</span>센터</button>
+      <button type="button" class="tab" id="tabRoster"><span class="tno">2</span>어르신</button>
+      <button type="button" class="tab" id="tabToday"><span class="tno">3</span>오늘 송영</button>
+      <button type="button" class="tab" id="tabResult" disabled><span class="tno">4</span>결과</button>
     </div>
 
     <div class="pbody">
@@ -503,7 +708,7 @@ select{font:inherit;padding:9px 10px;border:1px solid var(--line-2);border-radiu
             <textarea id="rNote" placeholder="메모 (선택)" style="min-height:56px"></textarea>
           </div>
           <div class="rowbtns">
-            <button type="button" class="chip" id="rSave">등록</button>
+            <button type="button" class="chip primary ic ic-plus" id="rSave">등록</button>
             <button type="button" class="chip quiet" id="rCancel" hidden>취소</button>
           </div>
         </div>
@@ -512,8 +717,8 @@ select{font:inherit;padding:9px 10px;border:1px solid var(--line-2);border-radiu
           <h2>등록된 어르신 <span class="cnt" id="rosterCount"></span></h2>
           <div id="rosterList"></div>
           <div class="rowbtns">
-            <button type="button" class="chip quiet" id="rSample">예시 채우기</button>
-            <button type="button" class="chip quiet" id="rClearAll">전체 삭제</button>
+            <button type="button" class="chip ic ic-spark" id="rSample">예시 채우기</button>
+            <button type="button" class="chip danger ic ic-trash" id="rClearAll">전체 삭제</button>
           </div>
         </div>
 
@@ -523,7 +728,7 @@ select{font:inherit;padding:9px 10px;border:1px solid var(--line-2);border-radiu
             <p class="tiny" style="margin:0 0 8px">한 줄에 한 명씩 이름, 주소 순서로 붙여넣으세요. 엑셀에서 복사한 표도 됩니다.</p>
             <textarea id="rBulk" placeholder="홍길동, 전주시 완산구 서원로 10&#10;김영희, 전주시 완산구 백제대로 250"></textarea>
             <div class="rowbtns">
-              <button type="button" class="chip" id="rBulkGo">명단 등록</button>
+              <button type="button" class="chip primary ic ic-list" id="rBulkGo">명단 등록</button>
               <span class="rbulkstat" id="rBulkStatus"></span>
             </div>
           </div>
@@ -536,8 +741,8 @@ select{font:inherit;padding:9px 10px;border:1px solid var(--line-2);border-radiu
           <h2>오늘 송영 대상 <span class="cnt" id="todayCount"></span></h2>
           <p class="sub">체크한 어르신만 계산에 들어갑니다.</p>
           <div class="rowbtns" style="margin-top:0;margin-bottom:9px">
-            <button type="button" class="chip quiet" id="selAll">전체 선택</button>
-            <button type="button" class="chip quiet" id="selNone">전체 해제</button>
+            <button type="button" class="chip ic ic-check" id="selAll">전체 선택</button>
+            <button type="button" class="chip ic ic-clear" id="selNone">전체 해제</button>
           </div>
           <div id="todayList"></div>
         </div>
@@ -597,12 +802,23 @@ select{font:inherit;padding:9px 10px;border:1px solid var(--line-2);border-radiu
                 <label for="stopMin">1인당 승하차 (분)</label>
                 <input type="number" id="stopMin" value="3" min="0" max="20">
               </div>
-              <div class="field">
-                <label for="factor">도로 보정 계수</label>
+            </div>
+
+            <div class="factorbox">
+              <div class="fhead">
+                <b>우리 센터 주변 길은 어떤가요?</b>
+                <span>도로 보정 계수 <em id="factorNow">× 1.3</em></span>
+              </div>
+              <p class="fexplain">지도에서 두 집 사이를 <b>자로 잰 거리</b>보다 실제로 차가 다니는 길은 더 깁니다.
+                그 차이를 곱해서 실제 거리를 어림합니다. 예) 직선 2km × 1.3 ≈ 실제 2.6km</p>
+              <div class="factorlist" id="factorList" role="radiogroup" aria-label="도로 보정 계수"></div>
+              <div class="fcustom" id="factorCustom" hidden>
+                <label for="factor">직접 입력 (1.0 ~ 2.0)</label>
                 <input type="number" id="factor" value="1.3" min="1" max="2" step="0.05">
               </div>
+              <p class="tiny">카카오모빌리티 실제 도로 경로를 받아 오면 화면의 거리는 실제 값으로 바뀌고,
+                이 값은 방문 순서를 정하는 계산에만 쓰입니다.</p>
             </div>
-            <p class="tiny">보정 계수는 직선거리를 실제 도로 거리에 가깝게 맞추는 값입니다. 도심 1.3, 외곽 1.2 정도가 무난합니다.</p>
             <label class="chk"><input type="checkbox" id="traffic" checked>
               <span>출발 시각의 도로 사정 반영</span></label>
             <p class="tiny">출퇴근 시간대에는 속도를 낮춰 계산합니다. 평균 속도는 길이 원활할 때 기준으로 적어 주세요.
@@ -2011,8 +2227,8 @@ function showPlan(pick){
     markBase += car.order.length;
   });
 
-  h += '<div class="rowbtns noprint"><button type="button" class="chip" id="printBtn">인쇄</button>' +
-       '<button type="button" class="chip quiet" id="copyBtn">순서 복사</button></div>';
+  h += '<div class="rowbtns noprint"><button type="button" class="chip ic ic-print" id="printBtn">인쇄</button>' +
+       '<button type="button" class="chip ic ic-copy" id="copyBtn">순서 복사</button></div>';
   if(opt.traffic && opt.start !== null){
     var band = trafficAt(opt.start);
     h += '<p class="note road">' + fmtTime(opt.start) + ' 출발은 <b>' + band.name + '</b> 시간대입니다. ' +
@@ -2027,7 +2243,7 @@ function showPlan(pick){
   h += '<p class="note">주소는 ' + (kakaoOk ? '카카오 지도' : '공개 지도 데이터') + '에서 찾았습니다. ' +
        (roadAll
          ? '거리는 카카오모빌리티 실제 도로 경로를 기준으로 잰 값입니다.'
-         : '거리는 두 지점의 직선거리에 보정 계수 ' + opt.factor +
+         : '거리는 두 지점의 직선거리에 도로 보정 계수(' + factorLabel(opt.factor) + ', × ' + opt.factor + ')' +
            '를 곱한 추정값입니다. 실제 도로와 교통 상황은 반영되지 않으니 순서를 잡는 참고 자료로 쓰시고, 최종 판단은 운행 담당자가 해 주세요.') +
        (multi ? ' 차량 배정은 가장 오래 걸리는 차의 시간을 줄이는 쪽으로 잡았습니다. 총 주행거리가 가장 짧은 배정과는 다를 수 있습니다.' : '') +
        (allExact ? '' : ' 한 차량이 15명을 넘어 근사 계산을 했습니다. 최적에 가깝지만 완전한 최단 경로가 아닐 수 있습니다.') + '</p>';
@@ -2125,6 +2341,72 @@ document.getElementById('centerName').addEventListener('input', queueSave);
   document.getElementById(id).addEventListener('input', queueSave);
 });
 document.getElementById('traffic').addEventListener('change', queueSave);
+
+/* ================= 도로 보정 계수 =================
+   숫자만 보여 주면 무엇을 넣을지 알기 어려워서, 동네 모습으로 고르게 한다.
+   고른 값은 그대로 #factor 에 들어가므로 저장·계산 방식은 예전과 같다. */
+function svgIcon(d){
+  return '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+         'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>';
+}
+var FACTOR_PRESETS = [
+  {v:1.2, name:'신도시 · 시 외곽', desc:'큰길이 반듯하게 뚫린 신도시·택지지구, 시 외곽',
+   icon:svgIcon('<path d="M3 20h18M5 20V9l4-2v13M11 20V5l5-2v17M18 20v-9l2 1v8"/>')},
+  {v:1.3, name:'일반 도심', desc:'신호등·교차로가 많은 보통 시내. 잘 모르겠으면 이것', rec:true,
+   icon:svgIcon('<rect x="8" y="2.5" width="8" height="15" rx="2.5"/><circle cx="12" cy="6.5" r="1.2"/><circle cx="12" cy="10" r="1.2"/><circle cx="12" cy="13.5" r="1.2"/><path d="M12 17.5v4"/>')},
+  {v:1.4, name:'구도심 · 골목', desc:'일방통행·좁은 골목이 많아 자주 돌아가는 동네',
+   icon:svgIcon('<path d="M4 20h5v-5h6v-5h5V4"/><circle cx="4" cy="20" r="1.2"/><circle cx="20" cy="4" r="1.2"/>')},
+  {v:1.5, name:'농어촌 · 산간', desc:'논밭·산·하천 때문에 길이 크게 굽어 도는 지역',
+   icon:svgIcon('<path d="M2.5 19.5l6.5-10 4.5 6.5 3-4 5 7.5z"/><circle cx="17" cy="5.5" r="1.8"/>')}
+];
+var ICON_PENCIL = svgIcon('<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>');
+var factorI = document.getElementById('factor');
+var factorCustomMode = false;
+
+function factorPreset(f){
+  for(var i=0;i<FACTOR_PRESETS.length;i++) if(Math.abs(FACTOR_PRESETS[i].v - f) < 1e-6) return FACTOR_PRESETS[i];
+  return null;
+}
+function factorLabel(f){ var p = factorPreset(f); return p ? p.name : '직접 입력'; }
+
+function renderFactor(){
+  var f = parseFloat(factorI.value) || 1.3;
+  var pre = factorCustomMode ? null : factorPreset(f);
+  document.getElementById('factorList').innerHTML = FACTOR_PRESETS.map(function(p){
+    return '<button type="button" class="fopt' + (pre === p ? ' on' : '') + '" role="radio" aria-checked="' + (pre === p) +
+      '" data-f="' + p.v + '"><span class="fi">' + p.icon + '</span>' +
+      '<span class="ft"><b>' + p.name + (p.rec ? ' <small>추천</small>' : '') + '</b><span>' + p.desc + '</span></span>' +
+      '<span class="fv">× ' + p.v.toFixed(1) + '</span></button>';
+  }).join('') +
+    '<button type="button" class="fopt' + (pre ? '' : ' on') + '" role="radio" aria-checked="' + !pre + '" data-f="custom">' +
+    '<span class="fi">' + ICON_PENCIL + '</span>' +
+    '<span class="ft"><b>직접 입력</b><span>운행해 보니 실제와 차이가 나면 값을 직접 맞춥니다</span></span>' +
+    '<span class="fv">' + (pre ? '' : '× ' + f) + '</span></button>';
+  document.getElementById('factorCustom').hidden = !!pre;
+  document.getElementById('factorNow').textContent = '× ' + f;
+}
+document.getElementById('factorList').addEventListener('click', function(e){
+  var b = e.target.closest ? e.target.closest('[data-f]') : null;
+  if(!b) return;
+  var v = b.getAttribute('data-f');
+  if(v === 'custom'){
+    factorCustomMode = true;
+    renderFactor();
+    factorI.focus();
+    factorI.select();
+    return;
+  }
+  factorCustomMode = false;
+  factorI.value = v;
+  renderFactor();
+  queueSave();
+});
+factorI.addEventListener('input', function(){
+  var f = parseFloat(factorI.value);
+  if(f >= 1 && f <= 2) document.getElementById('factorNow').textContent = '× ' + f;
+  var fv = document.querySelector('#factorList .fopt.on .fv');
+  if(fv && factorCustomMode) fv.textContent = f ? '× ' + f : '';
+});
 
 /* ================= 차량 고정 옵션 ================= */
 function carCountNow(){ return fleet.length; }
@@ -2847,6 +3129,7 @@ function boot(){
   modeDepartureBtn.classList.toggle('on', mode === 'departure');
   document.getElementById('startTime').value = todayMeta[mode].start;
   renderFleet();
+  renderFactor();
   fillCarOptions(rCarSel);
   syncCounts();
 
