@@ -10,6 +10,7 @@
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 :root{
   --bg:#e9ecf1; --panel:#fff; --panel-2:#f6f7f9;
   --ink:#12141a; --ink-2:#3c4350; --muted:#6f7885;
@@ -155,6 +156,81 @@ input:focus,textarea:focus{outline:none;border-color:var(--brand);
 select{font:inherit;padding:9px 10px;border:1px solid var(--line-2);border-radius:9px;
   background:#fff;color:var(--ink);width:100%}
 
+/* ----- 차량 ----- */
+.capgauge{margin:2px 0 12px;padding:11px 12px;border-radius:11px;background:var(--panel-2);border:1px solid var(--line)}
+.capgauge .cg-top{display:flex;align-items:baseline;gap:6px;font-size:12px;color:var(--muted);font-weight:600}
+.capgauge .cg-top b{font-size:17px;color:var(--ink);font-weight:800;font-variant-numeric:tabular-nums}
+.capgauge .cg-top .cg-msg{margin-left:auto;font-size:11.5px;font-weight:700}
+.capgauge .cg-bar{height:8px;border-radius:99px;background:#e3e7ee;margin-top:8px;overflow:hidden}
+.capgauge .cg-bar i{display:block;height:100%;border-radius:99px;background:var(--ok);transition:width .25s}
+.capgauge.tight .cg-bar i{background:#d98e04}
+.capgauge.tight .cg-msg{color:#b07303}
+.capgauge.over{background:#fef4f3;border-color:#f3c5c0}
+.capgauge.over .cg-bar i{background:var(--bad)}
+.capgauge.over .cg-msg{color:var(--bad)}
+.capgauge .cg-msg.ok{color:var(--ok)}
+
+.vcard{display:flex;align-items:center;gap:10px;padding:10px 10px 10px 13px;border:1px solid var(--line);
+  border-radius:12px;margin-bottom:7px;background:#fff;position:relative;overflow:hidden}
+.vcard::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--c)}
+.vcard .vicon{flex:none;width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;
+  background:color-mix(in srgb, var(--c) 13%, #fff);color:var(--c)}
+.vcard .vmain{flex:1;min-width:0}
+.vcard .vtop{display:flex;align-items:center;gap:6px;min-width:0}
+.vcard .vno{flex:none;font-size:10.5px;font-weight:800;color:#fff;background:var(--c);border-radius:6px;padding:2px 6px}
+.vcard .vname{font-size:13.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vcard .vname.none{color:var(--muted);font-weight:600}
+.vcard .vrow2{display:flex;align-items:center;gap:8px;margin-top:6px}
+.vcard .vsub{flex:1;min-width:0;font-size:11px;color:var(--muted);font-weight:600;white-space:nowrap}
+.vcard .vacts{flex:none;display:flex;flex-direction:column;gap:5px;align-self:center}
+.vstep{flex:none;display:flex;align-items:center;border:1px solid var(--line-2);border-radius:10px;overflow:hidden;background:#fff}
+.vstep button{width:30px;height:32px;border:0;background:none;font:inherit;font-size:16px;font-weight:700;
+  color:var(--ink-2);cursor:pointer}
+.vstep button:hover{background:var(--brand-soft);color:var(--brand)}
+.vstep button:disabled{color:#c9ced6;cursor:default;background:none}
+.vstep b{min-width:34px;text-align:center;font-size:14px;font-weight:800;font-variant-numeric:tabular-nums}
+.vstep b small{font-size:10px;font-weight:600;color:var(--muted);margin-left:1px}
+.vcard .iconbtn{height:28px;width:28px;flex:none;font-size:13px;padding:0}
+.vcard .iconbtn.edit:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-soft)}
+.vcard .iconbtn:disabled{opacity:.35;cursor:default}
+
+.addcar{width:100%;margin-top:2px;padding:10px;border:1.5px dashed var(--line-2);border-radius:11px;background:none;
+  font:inherit;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer}
+.addcar:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-soft)}
+.addcar:disabled{opacity:.5;cursor:default;background:none;border-color:var(--line-2);color:var(--muted)}
+
+.vpicker{margin-top:9px;padding:13px;border:1.5px solid var(--brand);border-radius:13px;background:#fbfcff}
+.vpicker .vp-title{font-size:13.5px;font-weight:800;margin-bottom:9px;color:var(--brand)}
+.vpicker .vp-lbl{display:block;font-size:11.5px;color:var(--muted);font-weight:700;margin:10px 0 6px}
+.vpicker .vp-lbl:first-of-type{margin-top:0}
+.brandrow{display:flex;flex-wrap:wrap;gap:6px}
+.brandbtn{border:1.5px solid var(--line-2);background:#fff;border-radius:99px;padding:6px 12px;font:inherit;
+  font-size:12.5px;font-weight:700;color:var(--ink-2);cursor:pointer}
+.brandbtn:hover{border-color:var(--brand);color:var(--brand)}
+.brandbtn.on{background:var(--brand);border-color:var(--brand);color:#fff}
+.modelgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.modelbtn{display:flex;align-items:center;gap:8px;text-align:left;border:1.5px solid var(--line);background:#fff;
+  border-radius:10px;padding:8px 9px;font:inherit;cursor:pointer;color:var(--ink)}
+.modelbtn:hover{border-color:var(--brand)}
+.modelbtn.on{border-color:var(--brand);background:var(--brand-soft)}
+.modelbtn .mi{flex:none;color:var(--muted)}
+.modelbtn.on .mi{color:var(--brand)}
+.modelbtn b{display:block;font-size:12.5px;font-weight:800;line-height:1.25}
+.modelbtn span{display:block;font-size:10.5px;color:var(--muted);font-weight:600}
+.vp-empty{font-size:11.5px;color:var(--muted);padding:6px 0}
+.vpicker .vstep{display:inline-flex}
+.vpicker .vstep b{min-width:44px}
+.vp-caprow{display:flex;align-items:center;gap:10px}
+.vp-caprow .tiny{margin:0;flex:1}
+.vp-err{font-size:11.5px;color:var(--bad);font-weight:700;margin:8px 0 0}
+.vp-err:empty{display:none}
+.vpicker .rowbtns{margin-top:12px}
+.btn-primary{border:0;border-radius:9px;padding:8px 16px;font:inherit;font-size:12.5px;font-weight:800;
+  background:var(--brand);color:#fff;cursor:pointer}
+.btn-primary:hover{background:var(--brand-dk)}
+
+.tcar{border-left-width:4px}
+
 /* ----- 어르신 관리 ----- */
 .rrow{display:flex;align-items:center;gap:8px;padding:9px 10px;border:1px solid var(--line);
   border-radius:10px;margin-bottom:6px;background:#fff}
@@ -218,6 +294,10 @@ select{font:inherit;padding:9px 10px;border:1px solid var(--line-2);border-radiu
   display:flex;align-items:center;justify-content:center;flex:none}
 .carname{font-size:14.5px;font-weight:800}
 .carmeta{font-size:11.5px;color:var(--muted);margin-left:auto;text-align:right;flex:none}
+.carname small{display:block;font-size:11px;font-weight:600;color:var(--muted);margin-top:1px}
+.carocc{display:inline-flex;align-items:center;gap:5px;margin-top:3px;font-size:10.5px;font-weight:700;color:var(--ink-2)}
+.carocc i{display:inline-block;width:46px;height:5px;border-radius:9px;background:#e3e7ee;overflow:hidden}
+.carocc i b{display:block;height:100%;border-radius:9px}
 .route{list-style:none;margin:0;padding:0}
 .stop{display:flex;gap:10px;cursor:pointer;border-radius:9px;padding:2px 4px}
 .stop:hover{background:#f4f7fb}
@@ -462,17 +542,41 @@ select{font:inherit;padding:9px 10px;border:1px solid var(--line-2);border-radiu
           <div id="todayList"></div>
         </div>
 
-        <div class="blk">
-          <h2>차량</h2>
-          <p class="sub">여러 대로 나누면 가장 오래 걸리는 차가 최대한 빨리 끝나도록 인원을 배정합니다.</p>
-          <div class="grid2">
-            <div class="field">
-              <label for="cars">차량 대수</label>
-              <input type="number" id="cars" value="1" min="1" max="4">
+        <div class="blk" id="fleetBlk">
+          <h2>운행 차량 <span class="cnt" id="fleetCount"></span></h2>
+          <p class="sub">센터 차량을 등록하고 차마다 어르신 탑승 인원을 정하세요. 여러 대면 가장 오래 걸리는 차가 최대한 빨리 끝나도록 나눠 태웁니다.</p>
+          <div class="capgauge" id="capGauge"></div>
+          <div id="fleetList"></div>
+          <button type="button" class="addcar" id="fleetAdd">+ 차량 추가</button>
+
+          <div class="vpicker" id="vPicker" hidden>
+            <div class="vp-title" id="vpTitle">차량 추가</div>
+            <span class="vp-lbl">제조사</span>
+            <div class="brandrow" id="vpBrands"></div>
+            <span class="vp-lbl" id="vpModelLbl">차종</span>
+            <div class="modelgrid" id="vpModels"></div>
+            <div id="vpCustom" hidden>
+              <input type="text" id="vpCustomName" maxlength="30" placeholder="차량 이름 (예: 휠체어 리프트 카니발)">
+              <div class="grid2" style="margin-top:7px">
+                <div class="field">
+                  <label for="vpCustomSeats">승차 정원 (인승, 선택)</label>
+                  <input type="number" id="vpCustomSeats" min="2" max="45" placeholder="예: 12">
+                </div>
+              </div>
             </div>
-            <div class="field">
-              <label for="seats">차량당 정원</label>
-              <input type="number" id="seats" value="9" min="1" max="20">
+            <span class="vp-lbl">어르신 탑승 인원</span>
+            <div class="vp-caprow">
+              <div class="vstep" id="vpStep">
+                <button type="button" data-step="-1" aria-label="한 명 줄이기">&minus;</button>
+                <b id="vpCap">9<small>명</small></b>
+                <button type="button" data-step="1" aria-label="한 명 늘리기">+</button>
+              </div>
+              <p class="tiny" id="vpCapHint">운전석을 뺀 자리 수입니다. 동승 보호사가 타면 한 자리 줄여 주세요.</p>
+            </div>
+            <p class="vp-err" id="vpErr"></p>
+            <div class="rowbtns">
+              <button type="button" class="btn-primary" id="vpSave">추가</button>
+              <button type="button" class="chip quiet" id="vpCancel">취소</button>
             </div>
           </div>
         </div>
@@ -958,11 +1062,12 @@ function drawRoute(ch, rows, cars, total){
   MV.marker(ch.lat, ch.lng, '센터', 'center',
             document.getElementById('centerName').value.trim() || '센터');
 
+  var fl = curCtx && curCtx.opt && curCtx.opt.fleet;
   cars.forEach(function(car, ci){
     var color = CAR_COLORS[ci % CAR_COLORS.length];
     car.order.forEach(function(pi, k){
       MV.marker(rows[pi-1].hit.lat, rows[pi-1].hit.lng, String(k+1), 'stop',
-                (cars.length > 1 ? (ci+1) + '호차 · ' : '') + rows[pi-1].name, color);
+                (cars.length > 1 ? carLabel(ci, fl) + ' · ' : '') + rows[pi-1].name, color);
     });
   });
 
@@ -974,8 +1079,9 @@ function drawRoute(ch, rows, cars, total){
     var rows2 = ['<div><i style="background:#0f9d8f"></i> 센터 (출발·도착)</div>'];
     if(cars.length > 1){
       cars.forEach(function(car, ci){
+        if(!car.order.length) return;
         rows2.push('<div><i style="background:' + CAR_COLORS[ci % CAR_COLORS.length] + '"></i> ' +
-                   (ci+1) + '호차 · ' + car.order.length + '명</div>');
+                   esc(carLabel(ci, fl)) + ' · ' + car.order.length + '명</div>');
       });
     } else {
       rows2.push('<div><i style="background:' + CAR_COLORS[0] + '"></i> 어르신 방문 순서</div>');
@@ -1074,8 +1180,7 @@ function saveState(){
       sp:document.getElementById('speed').value,
       sm:document.getElementById('stopMin').value,
       fc:document.getElementById('factor').value,
-      cr:document.getElementById('cars').value,
-      se:document.getElementById('seats').value,
+      fl:fleet.map(function(v){ return {id:v.id, brand:v.brand, model:v.model, seats:v.seats, cap:v.cap}; }),
       tf:document.getElementById('traffic').checked ? 1 : 0,
       mode:mode,
       today:{
@@ -1095,8 +1200,9 @@ function loadState(){
   if(s.sp) document.getElementById('speed').value = s.sp;
   if(s.sm) document.getElementById('stopMin').value = s.sm;
   if(s.fc) document.getElementById('factor').value = s.fc;
-  if(s.cr) document.getElementById('cars').value = s.cr;
-  if(s.se) document.getElementById('seats').value = s.se;
+  var fl = sanitizeFleet(s.fl);
+  if(fl) fleet = fl;
+  else if(s.cr || s.se) fleet = legacyFleet(s.cr, s.se);
   if(s.tf !== undefined) document.getElementById('traffic').checked = !!s.tf;
   if(s.mode) mode = s.mode;
   if(s.today){
@@ -1124,8 +1230,7 @@ function migrateV1(){
     if(v1.sp) document.getElementById('speed').value = v1.sp;
     if(v1.sm) document.getElementById('stopMin').value = v1.sm;
     if(v1.fc) document.getElementById('factor').value = v1.fc;
-    if(v1.cr) document.getElementById('cars').value = v1.cr;
-    if(v1.se) document.getElementById('seats').value = v1.se;
+    if(v1.cr || v1.se) fleet = legacyFleet(v1.cr, v1.se);
     if(v1.tf !== undefined) document.getElementById('traffic').checked = !!v1.tf;
     if(v1.st) todayMeta.arrival.start = v1.st;
   }catch(e){ /* 손상된 옛 데이터는 그냥 건너뛴다 */ }
@@ -1140,6 +1245,7 @@ function syncCounts(){
   if(tc) tc.textContent = n ? n + '명' : '';
   var btn = document.getElementById('calc');
   if(btn && !btn.disabled) btn.textContent = n ? ('어르신 ' + n + '명 경로 계산') : '최적경로 계산';
+  renderCapGauge();
 }
 
 var saveTimer = null;
@@ -1410,7 +1516,7 @@ function heuristic(D,N){
    시간을 줄이는 것이다. 어르신이 차 안에 오래 앉아 계시지 않게 하는 것이
    센터에서 실제로 중요한 부분이라서다. 같은 조건이면 총 거리가 짧은 쪽을 고른다. */
 
-var CAR_COLORS = ['#f4623a', '#2563eb', '#7c3aed', '#db2777'];
+var CAR_COLORS = ['#f4623a', '#2563eb', '#7c3aed', '#db2777', '#0d9488', '#ca8a04'];
 
 /* 전체 거리표에서 한 차량이 맡은 사람만 뽑아 경로를 푼다.
    idx 는 원본 번호(1부터)이고, 돌려주는 order 도 원본 번호로 맞춰 준다. */
@@ -1554,12 +1660,63 @@ function betterScore(a, b){
   return a.sum < b.sum - 1e-9;
 }
 
+/* n 명을 남은 자리(rem) 비율대로 나눈다. 큰 차에 더 많이, 각 차 남은 자리는 넘기지 않는다. */
+function shareSizes(rem, n){
+  var tot = rem.reduce(function(s, r){ return s + Math.max(r, 0); }, 0);
+  var size = rem.map(function(r){ return tot ? Math.floor(n * Math.max(r, 0) / tot) : 0; });
+  var left = n - size.reduce(function(s, x){ return s + x; }, 0);
+  while(left > 0){
+    var pick = -1, bestFrac = -1;
+    for(var i=0;i<rem.length;i++){
+      if(size[i] >= rem[i]) continue;
+      var frac = tot ? n * rem[i] / tot - size[i] : 1;
+      if(frac > bestFrac){ bestFrac = frac; pick = i; }
+    }
+    if(pick < 0) break;
+    size[pick]++; left--;
+  }
+  return size;
+}
+
+/* 방위각 순서로 자를 때 차를 어떤 순서로 놓을지. 정원이 다르면 어느 방향에
+   큰 차가 가느냐에 따라 결과가 달라지므로, 4대까지는 순서를 전부 돌려 본다.
+   고정 배정이 없고 남은 자리가 같은 차끼리는 바꿔 봐야 같은 결과라 한 번만 본다. */
+function carOrders(rem, anyPinned){
+  var K = rem.length, base = [];
+  for(var i=0;i<K;i++) base.push(i);
+  if(K <= 1) return [base];
+  var perms = [];
+  if(K <= 4){
+    (function walk(prefix, rest){
+      if(!rest.length){ perms.push(prefix); return; }
+      rest.forEach(function(x, k){ walk(prefix.concat([x]), rest.slice(0, k).concat(rest.slice(k+1))); });
+    })([], base);
+  } else {
+    perms = [base, base.slice().reverse()];
+  }
+  if(anyPinned) return perms;
+  var seen = {};
+  return perms.filter(function(p){
+    var key = p.map(function(ci){ return rem[ci]; }).join(',');
+    if(seen[key]) return false;
+    seen[key] = true;
+    return true;
+  });
+}
+
 /* pins[idx-1] 는 그 사람의 고정 차량(1부터) 이거나, 고정이 없으면 0.
    차량 범위를 벗어난 값(대수를 줄인 뒤 남은 옛 값 등)은 고정 없음으로 본다.
+   caps 는 차마다의 어르신 탑승 인원(숫자 하나면 모든 차가 같은 정원).
    고정된 인원이 그 차 정원을 넘으면 계산 대신 {error:'pinover', ...} 를 돌려준다. */
-function splitCars(D, N, K, cap, pts, opt, pins){
+function splitCars(D, N, K, caps, pts, opt, pins){
   var i, all = [];
   for(i=1;i<=N;i++) all.push(i);
+
+  if(typeof caps === 'number'){
+    var one = caps;
+    caps = [];
+    for(i=0;i<K;i++) caps.push(one);
+  }
 
   if(K <= 1) return [all];
 
@@ -1578,7 +1735,7 @@ function splitCars(D, N, K, cap, pts, opt, pins){
     }
   });
   for(i=0;i<K;i++){
-    if(pinnedCount[i] > cap) return {error:'pinover', car:i+1, count:pinnedCount[i], cap:cap};
+    if(pinnedCount[i] > caps[i]) return {error:'pinover', car:i+1, count:pinnedCount[i], cap:caps[i]};
   }
 
   if(!unpinned.length) return groups;
@@ -1586,32 +1743,36 @@ function splitCars(D, N, K, cap, pts, opt, pins){
   // 센터를 중심으로 방위각 순서로 세운 뒤, 이어지는 덩어리로 자른다.
   // 같은 방향에 사는 분들이 한 차에 묶이도록 하는 것이 출발점이다.
   // 고정된 인원은 이미 자리를 차지하고 있으니, 남은 자리에만 채운다.
+  // 덩어리 크기는 차마다 남은 자리에 비례하게 잡는다(11인승에 더 많이, 5인승에 적게).
   var c = pts[0];
   var byAngle = unpinned.slice().sort(function(a, b){
     return Math.atan2(pts[a].lat - c.lat, pts[a].lng - c.lng) -
            Math.atan2(pts[b].lat - c.lat, pts[b].lng - c.lng);
   });
+  var remain0 = groups.map(function(gr, gi){ return caps[gi] - gr.length; });
 
-  // 어느 방향에서 자르기 시작하느냐에 따라 결과가 꽤 달라진다. 전부 돌려 본다.
+  // 어느 방향에서 자르기 시작하느냐, 어느 차를 어느 방향에 두느냐에 따라
+  // 결과가 꽤 달라진다. 전부 돌려 본다.
   var best = null, bestScore = null;
-  for(var r=0;r<byAngle.length;r++){
-    var rot = byAngle.slice(r).concat(byAngle.slice(0, r));
-    var g = groups.map(function(gr){ return gr.slice(); });
-    var remain = g.map(function(gr){ return cap - gr.length; });
-    var pos = 0;
-    for(var ci=0; ci<K; ci++){
-      var take = Math.max(0, Math.min(remain[ci], rot.length - pos));
-      if(take){ g[ci] = g[ci].concat(rot.slice(pos, pos + take)); pos += take; }
+  carOrders(remain0, unpinned.length < N).forEach(function(ord){
+    var sizes = shareSizes(ord.map(function(ci){ return remain0[ci]; }), byAngle.length);
+    for(var r=0;r<byAngle.length;r++){
+      var rot = byAngle.slice(r).concat(byAngle.slice(0, r));
+      var g = groups.map(function(gr){ return gr.slice(); });
+      var pos = 0;
+      for(var k=0;k<ord.length;k++){
+        if(sizes[k]){ g[ord[k]] = g[ord[k]].concat(rot.slice(pos, pos + sizes[k])); pos += sizes[k]; }
+      }
+      if(pos < rot.length) continue; // 이 배치로는 다 못 태운다
+      var sc = scoreGroups(D, g, opt);
+      if(!bestScore || betterScore(sc, bestScore)){ bestScore = sc; best = g; }
     }
-    if(pos < rot.length) continue; // 이 시작점으로는 다 못 태운다
-    var sc = scoreGroups(D, g, opt);
-    if(!bestScore || betterScore(sc, bestScore)){ bestScore = sc; best = g; }
-  }
+  });
 
   // 정원 때문에 어느 시작점에서도 다 못 태우면(극단적인 편중) 빈자리부터 채운다
   if(!best){
     best = groups.map(function(gr){ return gr.slice(); });
-    var remain2 = best.map(function(gr){ return cap - gr.length; });
+    var remain2 = best.map(function(gr, gi){ return caps[gi] - gr.length; });
     var pi = 0;
     byAngle.forEach(function(p){
       while(pi < K && remain2[pi] <= 0) pi++;
@@ -1629,7 +1790,7 @@ function splitCars(D, N, K, cap, pts, opt, pins){
       for(var ai=0;ai<best[a].length && !improved;ai++){
         if(pinnedSet[best[a][ai]]) continue;
         for(var b=0;b<K && !improved;b++){
-          if(a === b || best[b].length >= cap) continue;
+          if(a === b || best[b].length >= caps[b]) continue;
           var moved = best.map(function(g, gi){
             if(gi === a) return g.filter(function(_, k){ return k !== ai; });
             if(gi === b) return g.concat([best[a][ai]]);
@@ -1793,12 +1954,17 @@ function showPlan(pick){
     var carDist = realDist(car);
     var carMin = car.order.length ? carTime(curCtx.D, car.order, opt) : 0;
 
-    if(multi){
+    var veh = opt.fleet && opt.fleet[ci];
+    var vname = vehicleName(veh);
+    if(multi || vname){
+      var occ = veh ? Math.min(100, car.order.length / veh.cap * 100) : 0;
       h += '<div class="carhead' + (ci === 0 ? ' first' : '') + '">' +
            '<span class="cartag" style="background:' + color + '">' + (ci+1) + '</span>' +
-           '<span class="carname">' + (ci+1) + '호차</span>' +
-           '<span class="carmeta">' + car.order.length + '명 · ' + carDist.toFixed(1) + 'km · ' +
-           fmtDur(carMin) + '</span></div>';
+           '<span class="carname">' + (ci+1) + '호차' + (vname ? '<small>' + esc(vname) + '</small>' : '') + '</span>' +
+           '<span class="carmeta">' + car.order.length + '명 · ' + carDist.toFixed(1) + 'km · ' + fmtDur(carMin) +
+           (veh ? '<br><span class="carocc"><i><b style="width:' + occ + '%;background:' + color + '"></b></i>' +
+                  car.order.length + '/' + veh.cap + '석</span>' : '') +
+           '</span></div>';
     }
 
     var seq = [{who:center.name || '센터', where:center.addr, end:true}];
@@ -1878,7 +2044,7 @@ function showPlan(pick){
     cars.forEach(function(car, ci){
       if(multi){
         lines.push('');
-        lines.push('[' + (ci+1) + '호차] ' + car.order.length + '명 · ' + realDist(car).toFixed(1) + 'km');
+        lines.push('[' + carLabel(ci, opt.fleet) + '] ' + car.order.length + '명 · ' + realDist(car).toFixed(1) + 'km');
       }
       car.order.forEach(function(pi, k){
         lines.push((k+1) + '. ' + people[pi-1].name + ' — ' + people[pi-1].addr);
@@ -1955,28 +2121,276 @@ attachAc(document.getElementById('centerAc'), centerAddrI, function(hit){
   queueSave();
 });
 document.getElementById('centerName').addEventListener('input', queueSave);
-['startTime','speed','stopMin','factor','seats'].forEach(function(id){
+['startTime','speed','stopMin','factor'].forEach(function(id){
   document.getElementById(id).addEventListener('input', queueSave);
 });
 document.getElementById('traffic').addEventListener('change', queueSave);
 
-/* ================= 차량 대수 → 차량 고정 옵션 ================= */
-function carCountNow(){
-  return Math.min(Math.max(parseInt(document.getElementById('cars').value, 10) || 1, 1), 4);
-}
+/* ================= 차량 고정 옵션 ================= */
+function carCountNow(){ return fleet.length; }
 function fillCarOptions(sel){
   var K = carCountNow(), prev = sel.value, html = '<option value="0">자동배정</option>';
-  for(var i=1;i<=K;i++) html += '<option value="' + i + '">' + i + '호차 고정</option>';
+  for(var i=1;i<=K;i++){
+    var sn = vehicleShort(fleet[i-1]);
+    html += '<option value="' + i + '">' + i + '호차 고정' + (sn ? ' (' + esc(sn) + ')' : '') + '</option>';
+  }
   sel.innerHTML = html;
-  if(+prev <= K) sel.value = prev;
+  sel.value = (prev && +prev <= K) ? prev : '0';
 }
 var rCarSel = document.getElementById('rCar');
-document.getElementById('cars').addEventListener('input', function(){
+
+/* ================= 운행 차량 =================
+   차마다 제조사·차종·어르신 탑승 인원을 따로 둔다. 차종을 고르면 승차
+   정원(인승)에서 운전석 한 자리를 뺀 값을 탑승 인원으로 채워 주고,
+   사람이 직접 늘리거나 줄일 수 있다. 몇 호차인지는 목록 순서다. */
+var MAX_CARS = 6, MAX_CAP = 40;
+// 송영에 흔히 쓰는 차종과 대표 승차 정원(운전석 포함). 세부 사양에 따라 다를 수 있어 고른 뒤 고칠 수 있다.
+var VEHICLE_CATALOG = {
+  '현대':      [['스타리아',11],['스타렉스',12],['쏠라티',15],['팰리세이드',8],['싼타페',7],
+                ['그랜저',5],['쏘나타',5],['아반떼',5],['캐스퍼',4]],
+  '기아':      [['카니발',9],['쏘렌토',7],['K8',5],['K5',5],['K3',5]],
+  '쉐보레':    [['말리부',5],['올란도',7],['트랙스',5]],
+  '르노코리아': [['마스터 버스',15],['QM6',5],['SM6',5]],
+  'KG모빌리티': [['코란도 투리스모',11],['렉스턴',7],['토레스',5]]
+};
+var BRANDS = Object.keys(VEHICLE_CATALOG).concat(['기타']);
+
+function newVehicle(cap){ return {id:newId(), brand:'', model:'', seats:0, cap:cap || 9}; }
+var fleet = [newVehicle(9)];
+
+function clampCap(n){ n = parseInt(n, 10); return isNaN(n) ? 9 : Math.min(Math.max(n, 1), MAX_CAP); }
+function sanitizeFleet(list){
+  if(!Array.isArray(list)) return null;
+  var out = list.slice(0, MAX_CARS).map(function(v){
+    v = v || {};
+    return {id:String(v.id || newId()), brand:String(v.brand || '').slice(0, 20),
+            model:String(v.model || '').slice(0, 30),
+            seats:Math.min(Math.max(parseInt(v.seats, 10) || 0, 0), 60), cap:clampCap(v.cap)};
+  });
+  return out.length ? out : null;
+}
+// 예전 저장 형식(차량 대수 + 차량당 정원)을 차량 목록으로 바꾼다
+function legacyFleet(cr, se){
+  var k = Math.min(Math.max(parseInt(cr, 10) || 1, 1), MAX_CARS), list = [];
+  for(var i=0;i<k;i++) list.push(newVehicle(clampCap(se || 9)));
+  return list;
+}
+
+function vehicleName(v){
+  if(!v) return '';
+  if(v.brand === '기타') return v.model || '';
+  return v.brand && v.model ? v.brand + ' ' + v.model : '';
+}
+function vehicleShort(v){ return v ? (v.model || '') : ''; }
+function carLabel(i, fl){
+  var v = (fl || fleet)[i], sn = vehicleShort(v);
+  return (i+1) + '호차' + (sn ? ' ' + sn : '');
+}
+function totalCap(){ return fleet.reduce(function(s, v){ return s + v.cap; }, 0); }
+function catalogSeats(brand, model){
+  var list = VEHICLE_CATALOG[brand] || [];
+  for(var i=0;i<list.length;i++) if(list[i][0] === model) return list[i][1];
+  return 0;
+}
+
+var ICON_VAN = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 15.5V7.5a1.5 1.5 0 0 1 1.5-1.5h11.2a1.5 1.5 0 0 1 1.1.5l4.4 5V15a1 1 0 0 1-1 1h-.9"/><path d="M5.2 16H4a1.5 1.5 0 0 1-1.5-1.5"/><path d="M9.2 16h5.6"/><circle cx="7.2" cy="16.3" r="1.9"/><circle cx="16.8" cy="16.3" r="1.9"/><path d="M14.5 6.3v5.2h6"/><path d="M7 6v5.5M10.7 6v5.5"/></svg>';
+var ICON_CAR = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 16.3H3.5a1 1 0 0 1-1-1v-3.1a1 1 0 0 1 .3-.7L5 9.3l1.6-3.1A1.5 1.5 0 0 1 8 5.4h7.6a1.5 1.5 0 0 1 1.3.8L18.6 9.3l2.2 2.2a1 1 0 0 1 .3.7v3.1a1 1 0 0 1-1 1H19"/><path d="M9.3 16.3h5.4"/><circle cx="7.2" cy="16.3" r="1.9"/><circle cx="16.8" cy="16.3" r="1.9"/><path d="M5 9.3h13.6"/></svg>';
+function vehicleIcon(seats, cap){ return (seats || cap + 1) >= 7 ? ICON_VAN : ICON_CAR; }
+
+function renderCapGauge(){
+  var el = document.getElementById('capGauge');
+  if(!el || !fleet) return;
+  var cap = totalCap(), n = todaySel[mode].size;
+  var over = n > cap, tight = !over && n > 0 && cap - n <= 1;
+  var msg = over ? (n - cap) + '명 초과'
+          : n === 0 ? '대상을 체크해 주세요'
+          : cap === n ? '빈자리 없음' : '빈자리 ' + (cap - n) + '석';
+  el.className = 'capgauge' + (over ? ' over' : tight ? ' tight' : '');
+  el.innerHTML = '<div class="cg-top">오늘 탑승 <b>' + n + '</b>명 / 수용 <b>' + cap + '</b>명' +
+    '<span class="cg-msg' + (over || tight ? '' : ' ok') + '">' + msg + '</span></div>' +
+    '<div class="cg-bar"><i style="width:' + (cap ? Math.min(100, n / cap * 100) : (n ? 100 : 0)) + '%"></i></div>';
+}
+
+function renderFleet(){
+  var el = document.getElementById('fleetList');
+  el.innerHTML = fleet.map(function(v, i){
+    var color = CAR_COLORS[i % CAR_COLORS.length];
+    var name = vehicleName(v);
+    return '<div class="vcard" data-i="' + i + '" style="--c:' + color + '">' +
+      '<div class="vicon">' + vehicleIcon(v.seats, v.cap) + '</div>' +
+      '<div class="vmain">' +
+        '<div class="vtop"><span class="vno">' + (i+1) + '호차</span>' +
+          (name ? '<span class="vname">' + esc(name) + '</span>'
+                : '<span class="vname none">차종 미지정</span>') + '</div>' +
+        '<div class="vrow2"><span class="vsub">' + (v.seats ? v.seats + '인승 · ' : '') + '어르신 탑승</span>' +
+          '<div class="vstep">' +
+            '<button type="button" data-act="dec"' + (v.cap <= 1 ? ' disabled' : '') + ' aria-label="탑승 인원 줄이기">&minus;</button>' +
+            '<b>' + v.cap + '<small>명</small></b>' +
+            '<button type="button" data-act="inc"' + (v.cap >= MAX_CAP ? ' disabled' : '') + ' aria-label="탑승 인원 늘리기">+</button>' +
+          '</div></div>' +
+      '</div>' +
+      '<div class="vacts">' +
+        '<button type="button" class="iconbtn edit" data-act="edit" title="차종 바꾸기">&#9998;</button>' +
+        '<button type="button" class="iconbtn" data-act="del" title="차량 빼기"' + (fleet.length <= 1 ? ' disabled' : '') + '>&times;</button>' +
+      '</div></div>';
+  }).join('');
+  document.getElementById('fleetCount').textContent = fleet.length + '대';
+  var add = document.getElementById('fleetAdd');
+  add.disabled = fleet.length >= MAX_CARS;
+  add.textContent = add.disabled ? '차량은 ' + MAX_CARS + '대까지 등록할 수 있습니다' : '+ 차량 추가';
+  renderCapGauge();
+}
+
+// 차량 목록이 바뀌면 고정 배정 선택지와 명단도 같이 다시 그린다
+function fleetChanged(){
+  renderFleet();
   fillCarOptions(rCarSel);
   renderTodayList();
   renderRosterList();
   queueSave();
+}
+
+document.getElementById('fleetList').addEventListener('click', function(e){
+  var b = e.target.closest ? e.target.closest('[data-act]') : null;
+  if(!b || b.disabled) return;
+  var card = b.closest('.vcard');
+  var i = +card.getAttribute('data-i'), v = fleet[i], act = b.getAttribute('data-act');
+  if(act === 'dec' || act === 'inc'){
+    v.cap = clampCap(v.cap + (act === 'inc' ? 1 : -1));
+    renderFleet();
+    queueSave();
+  } else if(act === 'edit'){
+    openPicker(i);
+  } else if(act === 'del'){
+    var k = i + 1;
+    var pinned = roster.filter(function(r){ return r.carPin === k; });
+    if(!confirm(carLabel(i) + '을(를) 목록에서 뺄까요?' +
+                (pinned.length ? '\n이 차에 고정된 어르신 ' + pinned.length + '명은 자동배정으로 바뀝니다.' : ''))) return;
+    fleet.splice(i, 1);
+    // 뒤 차들은 번호가 하나씩 당겨지므로, 고정 배정도 같은 차를 계속 가리키게 맞춘다
+    roster.forEach(function(r){
+      if(r.carPin === k){ r.carPin = 0; idbPut(r); }
+      else if(r.carPin > k){ r.carPin--; idbPut(r); }
+    });
+    if(vpState && vpState.index != null) closePicker();
+    fleetChanged();
+  }
 });
+
+/* ----- 차량 고르기(추가·수정) ----- */
+var vpState = null;
+var vPicker = document.getElementById('vPicker');
+
+function openPicker(i){
+  var v = i == null ? null : fleet[i];
+  vpState = {index:(i == null ? null : i), brand:'', model:'', seats:0, cap:9};
+  if(v){
+    vpState.brand = v.brand; vpState.model = v.model; vpState.seats = v.seats; vpState.cap = v.cap;
+    // 목록에 없는 차종으로 저장돼 있으면 "기타"로 연다
+    if(v.brand && v.brand !== '기타' && !catalogSeats(v.brand, v.model)){
+      vpState.brand = '기타';
+      vpState.model = vehicleName(v);
+    }
+  }
+  document.getElementById('vpTitle').textContent = i == null ? '차량 추가' : carLabel(i) + ' 수정';
+  document.getElementById('vpSave').textContent = i == null ? '추가' : '저장';
+  document.getElementById('vpCustomName').value = vpState.brand === '기타' ? vpState.model : '';
+  document.getElementById('vpCustomSeats').value = vpState.brand === '기타' && vpState.seats ? vpState.seats : '';
+  document.getElementById('vpErr').textContent = '';
+  renderPicker();
+  vPicker.hidden = false;
+  document.getElementById('fleetAdd').hidden = true;
+  vPicker.scrollIntoView({block:'nearest', behavior:'smooth'});
+}
+function closePicker(){
+  vpState = null;
+  vPicker.hidden = true;
+  document.getElementById('fleetAdd').hidden = false;
+}
+
+function renderPicker(){
+  var s = vpState;
+  document.getElementById('vpBrands').innerHTML = BRANDS.map(function(b){
+    return '<button type="button" class="brandbtn' + (s.brand === b ? ' on' : '') + '" data-brand="' + b + '">' + b + '</button>';
+  }).join('');
+
+  var custom = s.brand === '기타';
+  document.getElementById('vpCustom').hidden = !custom;
+  document.getElementById('vpModels').hidden = custom;
+  document.getElementById('vpModelLbl').textContent = custom ? '차량 직접 입력' : '차종';
+  if(!custom){
+    var list = VEHICLE_CATALOG[s.brand];
+    document.getElementById('vpModels').innerHTML = !list
+      ? '<div class="vp-empty">위에서 제조사를 먼저 골라 주세요.</div>'
+      : list.map(function(m){
+          return '<button type="button" class="modelbtn' + (s.model === m[0] ? ' on' : '') + '" data-model="' + m[0] + '">' +
+            '<span class="mi">' + vehicleIcon(m[1], m[1] - 1) + '</span>' +
+            '<span><b>' + m[0] + '</b><span>' + m[1] + '인승</span></span></button>';
+        }).join('');
+  }
+
+  document.getElementById('vpCap').innerHTML = s.cap + '<small>명</small>';
+  var btns = document.querySelectorAll('#vpStep button');
+  btns[0].disabled = s.cap <= 1;
+  btns[1].disabled = s.cap >= MAX_CAP;
+}
+
+document.getElementById('vpBrands').addEventListener('click', function(e){
+  var b = e.target.closest ? e.target.closest('[data-brand]') : null;
+  if(!b) return;
+  var brand = b.getAttribute('data-brand');
+  if(brand === vpState.brand) return;
+  vpState.brand = brand;
+  if(brand === '기타'){
+    vpState.model = document.getElementById('vpCustomName').value.trim();
+    vpState.seats = parseInt(document.getElementById('vpCustomSeats').value, 10) || 0;
+  } else {
+    vpState.model = ''; vpState.seats = 0;
+  }
+  document.getElementById('vpErr').textContent = '';
+  renderPicker();
+  if(brand === '기타') document.getElementById('vpCustomName').focus();
+});
+document.getElementById('vpModels').addEventListener('click', function(e){
+  var b = e.target.closest ? e.target.closest('[data-model]') : null;
+  if(!b) return;
+  vpState.model = b.getAttribute('data-model');
+  vpState.seats = catalogSeats(vpState.brand, vpState.model);
+  vpState.cap = clampCap(vpState.seats - 1); // 운전석 한 자리를 뺀다
+  document.getElementById('vpErr').textContent = '';
+  renderPicker();
+});
+document.getElementById('vpCustomName').addEventListener('input', function(){
+  vpState.model = this.value.trim();
+});
+document.getElementById('vpCustomSeats').addEventListener('input', function(){
+  var n = parseInt(this.value, 10);
+  vpState.seats = n >= 2 ? Math.min(n, 60) : 0;
+  if(vpState.seats){ vpState.cap = clampCap(vpState.seats - 1); renderPicker(); }
+});
+document.getElementById('vpStep').addEventListener('click', function(e){
+  var b = e.target.closest ? e.target.closest('[data-step]') : null;
+  if(!b || b.disabled) return;
+  vpState.cap = clampCap(vpState.cap + (+b.getAttribute('data-step')));
+  renderPicker();
+});
+document.getElementById('vpCancel').addEventListener('click', closePicker);
+document.getElementById('vpSave').addEventListener('click', function(){
+  var s = vpState, err = document.getElementById('vpErr');
+  if(!s.brand){ err.textContent = '제조사를 골라 주세요.'; return; }
+  if(!s.model){ err.textContent = s.brand === '기타' ? '차량 이름을 적어 주세요.' : '차종을 골라 주세요.'; return; }
+  var v = {brand:s.brand, model:s.model.slice(0, 30), seats:s.seats, cap:clampCap(s.cap)};
+  if(s.index == null){
+    v.id = newId();
+    fleet.push(v);
+  } else {
+    v.id = fleet[s.index].id;
+    fleet[s.index] = v;
+  }
+  closePicker();
+  fleetChanged();
+});
+document.getElementById('fleetAdd').addEventListener('click', function(){ openPicker(null); });
 
 /* ================= 어르신 관리 ================= */
 var rNameI = document.getElementById('rName');
@@ -2045,7 +2459,7 @@ function editRoster(id){
   if(!e) return;
   editingId = id;
   rNameI.value = e.name; rAddrI.value = e.addr; rNoteI.value = e.note || '';
-  rCarSel.value = String(e.carPin || 0);
+  rCarSel.value = String(e.carPin >= 1 && e.carPin <= fleet.length ? e.carPin : 0);
   if(e.lat != null){
     rHit = {lat:e.lat, lng:e.lng};
     setPin(rPinEl, {lat:e.lat, lng:e.lng, title:e.addr, approx:false});
@@ -2100,7 +2514,7 @@ function renderRosterList(){
     return;
   }
   listEl.innerHTML = roster.map(function(e){
-    var badge = e.carPin ? (e.carPin + '호차') : '자동';
+    var badge = (e.carPin >= 1 && e.carPin <= fleet.length) ? esc(carLabel(e.carPin - 1)) : '자동';
     var warn = e.lat == null ? '<span class="rwarn">위치 확인 필요</span>' : '';
     return '<div class="rrow" data-id="' + e.id + '">' +
       '<div class="rmain"><span class="rname">' + esc(e.name) + warn + '</span>' +
@@ -2215,12 +2629,14 @@ function renderTodayList(){
   listEl.innerHTML = roster.map(function(e){
     var checked = sel.has(e.id);
     var warn = e.lat == null ? ' <span class="rwarn">위치 확인 필요</span>' : '';
-    var opts = '<option value="0"' + (!e.carPin ? ' selected' : '') + '>자동</option>';
-    for(var i=1;i<=K;i++) opts += '<option value="' + i + '"' + (e.carPin === i ? ' selected' : '') + '>' + i + '호차</option>';
+    var pin = (e.carPin >= 1 && e.carPin <= K) ? e.carPin : 0;
+    var opts = '<option value="0"' + (!pin ? ' selected' : '') + '>자동</option>';
+    for(var i=1;i<=K;i++) opts += '<option value="' + i + '"' + (pin === i ? ' selected' : '') + '>' + esc(carLabel(i-1)) + '</option>';
+    var pinColor = pin ? CAR_COLORS[(pin-1) % CAR_COLORS.length] : 'var(--line-2)';
     return '<label class="trow"><input type="checkbox" data-id="' + e.id + '"' + (checked ? ' checked' : '') + '>' +
       '<span class="tmain"><span class="tname">' + esc(e.name) + '</span>' +
       '<span class="taddr">' + esc(e.addr) + warn + '</span></span>' +
-      '<select class="tcar" data-id="' + e.id + '">' + opts + '</select></label>';
+      '<select class="tcar" data-id="' + e.id + '" style="border-left-color:' + pinColor + '" title="고정할 차량">' + opts + '</select></label>';
   }).join('');
 }
 
@@ -2235,7 +2651,12 @@ document.getElementById('todayList').addEventListener('change', function(e){
     drawPreview();
   } else if(t.classList.contains('tcar')){
     var el = rosterById(id);
-    if(el){ el.carPin = (+t.value) || 0; idbPut(el); renderRosterList(); }
+    if(el){
+      el.carPin = (+t.value) || 0;
+      idbPut(el);
+      renderRosterList();
+      t.style.borderLeftColor = el.carPin ? CAR_COLORS[(el.carPin-1) % CAR_COLORS.length] : 'var(--line-2)';
+    }
   }
 });
 
@@ -2316,16 +2737,18 @@ calcBtn.addEventListener('click', function(){
     factor: parseFloat(document.getElementById('factor').value) || 1.3,
     start: parseTime(document.getElementById('startTime').value),
     cars: carCountNow(),
-    seats: Math.min(Math.max(parseInt(document.getElementById('seats').value, 10) || 9, 1), 20),
+    caps: fleet.map(function(v){ return v.cap; }),
+    // 계산 중에 차량 목록을 고쳐도 이번 결과의 차 이름이 바뀌지 않게 복사해 둔다
+    fleet: fleet.map(function(v){ return {brand:v.brand, model:v.model, seats:v.seats, cap:v.cap}; }),
     traffic: document.getElementById('traffic').checked,
     mode: mode
   };
 
-  var N = rowsAll.length;
-  if(N > opt.cars * opt.seats){
+  var N = rowsAll.length, capSum = totalCap();
+  if(N > capSum){
     setTab('today');
     showValidation('<div class="alert"><b>차량이 모자랍니다.</b>송영 대상자가 차량 수용 가능 인원보다 ' +
-         (N - opt.cars * opt.seats) + '명 많습니다. 차량 대수나 정원을 늘려 주세요.</div>');
+         (N - capSum) + '명 많습니다. 차량을 추가하거나 차량별 탑승 인원을 늘려 주세요.</div>');
     return;
   }
 
@@ -2356,11 +2779,11 @@ calcBtn.addEventListener('click', function(){
     var D = matrix(pts, opt.factor);
     var pins = rows.map(function(p){ return p.carPin; });
 
-    var groups = splitCars(D, N, opt.cars, opt.seats, pts, opt, pins);
+    var groups = splitCars(D, N, opt.cars, opt.caps, pts, opt, pins);
     if(groups && groups.error === 'pinover'){
       setTab('today');
       showValidation('<div class="alert"><b>차량 고정 인원이 정원을 초과했습니다.</b>' +
-           groups.car + '호차에 고정된 인원이 ' + groups.count + '명인데 정원은 ' + groups.cap +
+           esc(carLabel(groups.car - 1, opt.fleet)) + '에 고정된 인원이 ' + groups.count + '명인데 정원은 ' + groups.cap +
            '명입니다. 오늘 송영 탭에서 배정을 조정해 주세요.</div>');
       return;
     }
@@ -2423,6 +2846,7 @@ function boot(){
   modeArrivalBtn.classList.toggle('on', mode === 'arrival');
   modeDepartureBtn.classList.toggle('on', mode === 'departure');
   document.getElementById('startTime').value = todayMeta[mode].start;
+  renderFleet();
   fillCarOptions(rCarSel);
   syncCounts();
 
